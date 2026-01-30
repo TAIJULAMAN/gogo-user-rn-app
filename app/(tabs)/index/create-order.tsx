@@ -78,7 +78,7 @@ export default function CreateOrderScreen() {
                                     onChangeText={setPickup}
                                     placeholderTextColor="#333"
                                 />
-                                <TouchableOpacity style={styles.targetIcon}>
+                                <TouchableOpacity style={styles.targetIcon} onPress={() => router.push('/(tabs)/pickup-location')}>
                                     <MaterialIcons name="my-location" size={20} color="#999" />
                                 </TouchableOpacity>
                             </View>
@@ -94,7 +94,7 @@ export default function CreateOrderScreen() {
                                     onChangeText={setDropoff}
                                     placeholderTextColor="#999"
                                 />
-                                <TouchableOpacity style={styles.targetIcon}>
+                                <TouchableOpacity style={styles.targetIcon} onPress={() => router.push('/(tabs)/drop-location')}>
                                     <MaterialIcons name="my-location" size={20} color="#999" />
                                 </TouchableOpacity>
                             </View>
@@ -179,7 +179,6 @@ const styles = StyleSheet.create({
         paddingHorizontal: 20,
         paddingTop: 20,
     },
-    // Stepper Styling
     stepperContainer: {
         flexDirection: 'row',
         alignItems: 'flex-start',
@@ -291,7 +290,7 @@ const styles = StyleSheet.create({
         backgroundColor: '#fff',
         borderWidth: 1,
         borderColor: '#E0E0E0',
-        borderRadius: 12,
+        borderRadius: 25,
         paddingHorizontal: 12,
         height: 50,
         shadowColor: "#000",
@@ -305,8 +304,6 @@ const styles = StyleSheet.create({
         height: '100%',
         fontSize: 14,
         color: '#333',
-        // @ts-ignore - Web only style
-        outlineWidth: 0,
     },
     targetIcon: {
         padding: 4,
