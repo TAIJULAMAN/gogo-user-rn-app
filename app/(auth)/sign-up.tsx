@@ -6,11 +6,11 @@ import { Button } from '../../components/Button';
 import { Colors } from '../../constants/Colors';
 import { useAuth } from '../../context/AuthContext';
 
-type UserRole = 'user' | 'rider';
+
 
 export default function SignUpScreen() {
     const router = useRouter();
-    const [role, setRole] = useState<UserRole>('user');
+
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
     const [phone, setPhone] = useState('');
@@ -23,13 +23,9 @@ export default function SignUpScreen() {
 
     const handleSignUp = async () => {
         setLoading(true);
-        await signIn(role);
+        await signIn('user');
         setLoading(false);
-        if (role === 'rider') {
-            router.replace('/(rider)');
-        } else {
-            router.replace('/(user)/user');
-        }
+        router.replace('/(user)/user');
     };
 
     return (
@@ -44,53 +40,7 @@ export default function SignUpScreen() {
                 </View>
 
                 <View style={styles.form}>
-                    {/* Role Selection */}
-                    <View style={styles.inputContainer}>
-                        <Text style={styles.label}>I am a</Text>
-                        <View style={styles.roleContainer}>
-                            <TouchableOpacity
-                                style={[
-                                    styles.roleButton,
-                                    role === 'user' && styles.roleButtonActive
-                                ]}
-                                onPress={() => setRole('user')}
-                            >
-                                <Text style={[
-                                    styles.roleButtonText,
-                                    role === 'user' && styles.roleButtonTextActive
-                                ]}>
-                                    User
-                                </Text>
-                                <Text style={[
-                                    styles.roleButtonSubtext,
-                                    role === 'user' && styles.roleButtonSubtextActive
-                                ]}>
-                                    Order deliveries
-                                </Text>
-                            </TouchableOpacity>
 
-                            <TouchableOpacity
-                                style={[
-                                    styles.roleButton,
-                                    role === 'rider' && styles.roleButtonActive
-                                ]}
-                                onPress={() => setRole('rider')}
-                            >
-                                <Text style={[
-                                    styles.roleButtonText,
-                                    role === 'rider' && styles.roleButtonTextActive
-                                ]}>
-                                    Rider
-                                </Text>
-                                <Text style={[
-                                    styles.roleButtonSubtext,
-                                    role === 'rider' && styles.roleButtonSubtextActive
-                                ]}>
-                                    Deliver packages
-                                </Text>
-                            </TouchableOpacity>
-                        </View>
-                    </View>
 
                     <View style={styles.inputContainer}>
                         <Text style={styles.label}>Full Name</Text>

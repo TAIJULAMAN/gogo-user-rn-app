@@ -2,7 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
 import React, { createContext, useContext, useEffect, useState } from 'react';
 
-type UserRole = 'user' | 'rider' | null;
+type UserRole = 'user' | null;
 
 interface AuthContextType {
     userRole: UserRole;
@@ -32,7 +32,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const loadRole = async () => {
         try {
             const storedRole = await AsyncStorage.getItem('userRole');
-            if (storedRole === 'user' || storedRole === 'rider') {
+            if (storedRole === 'user') {
                 setUserRole(storedRole);
             }
         } catch (error) {

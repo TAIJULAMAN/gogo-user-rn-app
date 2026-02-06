@@ -245,7 +245,7 @@ const styles = StyleSheet.create({
     },
     featureText: {
         fontSize: 20,
-        fontWeight: '700',
+        fontWeight: '900',
         color: '#2C3E50',
         marginBottom: 8,
         lineHeight: 28,
