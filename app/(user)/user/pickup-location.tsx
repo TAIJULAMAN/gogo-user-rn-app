@@ -1,16 +1,29 @@
-import { Ionicons, MaterialIcons } from '@expo/vector-icons';
+import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
-import { Image, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Image, ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import Animated, { FadeInDown, FadeInUp, Layout } from 'react-native-reanimated';
+import { CustomInput } from '../../../components/CustomInput';
+import { PickupIcon } from '../../../components/LocationIcons';
 import { Colors } from '../../../constants/Colors';
 
 const STEPS = ['Locations', 'Vehicle', 'Checkout', 'Payment'];
+
+const RECENT_LOCATIONS = [
+    { name: 'Jasani LLC', address: '305, 3rd Floor, Building 3, Bay Square, Business Bay' },
+    { name: 'Rashed Al Shamsi Advertising', address: 'Behind Haneefa Supermarket, Diera' },
+    { name: 'Nerds Company LLC', address: 'Behind Dubai Garden, Al Quoz' },
+    { name: 'Wisam Sign', address: 'Industrial Area 2, Sharjah' },
+];
 
 export default function PickupLocationScreen() {
     const router = useRouter();
     const [currentStep, setCurrentStep] = useState(0);
     const [searchQuery, setSearchQuery] = useState('');
     const [showDropdown, setShowDropdown] = useState(false);
+    const [details, setDetails] = useState('');
+    const [personName, setPersonName] = useState('');
+    const [phone, setPhone] = useState('');
 
     const handleSelectLocation = (location: string) => {
         setSearchQuery(location);
@@ -22,19 +35,32 @@ export default function PickupLocationScreen() {
             {STEPS.map((step, index) => (
                 <React.Fragment key={index}>
                     <View style={styles.stepItem}>
-                        <View style={[
-                            styles.stepCircle,
-                            index <= currentStep ? styles.stepActive : styles.stepInactive
-                        ]}>
-                            <Text style={styles.stepNumber}>{index + 1}</Text>
-                        </View>
+                        <Animated.View
+                            style={[
+                                styles.stepCircle,
+                                index <= currentStep ? styles.stepActive : styles.stepInactive
+                            ]}
+                            layout={Layout.springify()}
+                        >
+                            <Text style={[
+                                styles.stepNumber,
+                                index <= currentStep && { color: '#000' }
+                            ]}>{index + 1}</Text>
+                        </Animated.View>
                         <Text style={[
                             styles.stepLabel,
                             index <= currentStep ? styles.stepLabelActive : styles.stepLabelInactive
                         ]}>{step}</Text>
                     </View>
                     {index < STEPS.length - 1 && (
-                        <View style={styles.stepLineContainer} />
+                        <View style={styles.stepLineContainer}>
+                            <Animated.View
+                                style={[
+                                    styles.stepLineFill,
+                                    { width: index < currentStep ? '100%' : '0%' }
+                                ]}
+                            />
+                        </View>
                     )}
                 </React.Fragment>
             ))}
@@ -43,114 +69,147 @@ export default function PickupLocationScreen() {
 
     return (
         <View style={styles.container}>
+            <StatusBar barStyle="dark-content" />
+
             {/* Header */}
-            <View style={styles.header}>
+            <Animated.View
+                entering={FadeInUp.delay(100).duration(600)}
+                style={styles.header}
+            >
                 <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
                     <Ionicons name="arrow-back" size={24} color="#000" />
                 </TouchableOpacity>
-                <Text style={styles.headerTitle}>CREATE ORDER</Text>
+                <Text style={styles.headerTitle}>Pickup Location</Text>
                 <View style={{ width: 24 }} />
-            </View>
+            </Animated.View>
 
             <View style={styles.card}>
                 {renderStepper()}
 
-                {/* Pickup Location Title Section */}
-                <View style={styles.titleSection}>
+                {/* Title Section with Custom Icon */}
+                <Animated.View
+                    entering={FadeInDown.delay(200).duration(600)}
+                    style={styles.titleSection}
+                >
                     <View style={styles.locationIconContainer}>
-                        <MaterialIcons name="location-on" size={24} color="#4CAF50" />
+                        <PickupIcon size={32} />
                     </View>
                     <View>
-                        <Text style={styles.pageTitle}>Pickup location</Text>
-                        <Text style={styles.pageSubtitle}>Choose where to Pickup</Text>
+                        <Text style={styles.pageTitle}>Pickup Location</Text>
+                        <Text style={styles.pageSubtitle}>Choose where to pickup</Text>
                     </View>
-                </View>
+                </Animated.View>
 
                 {/* Search Bar */}
-                <View style={[styles.searchContainer, { zIndex: 30 }]}>
-                    <TextInput
-                        style={styles.searchInput}
-                        placeholder="Type to search or paste whatsapp location link"
-                        placeholderTextColor="#999"
+                <Animated.View
+                    entering={FadeInDown.delay(300).duration(600)}
+                    style={[styles.searchContainer, { zIndex: 30 }]}
+                >
+                    <CustomInput
+                        placeholder="Type to search or paste location link"
                         value={searchQuery}
                         onChangeText={(text) => {
                             setSearchQuery(text);
                             setShowDropdown(true);
                         }}
                         onFocus={() => setShowDropdown(true)}
+                        icon={<Ionicons name="search" size={20} color="#999" />}
                     />
-                </View>
+                </Animated.View>
 
-                {/* Dismiss Overlay (Transparent) */}
+                {/* Dropdown */}
                 {showDropdown && (
-                    <TouchableOpacity
-                        style={styles.dismissOverlay}
-                        activeOpacity={1}
-                        onPress={() => setShowDropdown(false)}
-                    />
-                )}
-
-                {/* Search Dropdown*/}
-                {showDropdown && (
-                    <View style={styles.dropdownOverlay}>
-                        <View style={styles.recentDropsSection}>
-                            <Text style={styles.recentDropsTitle}>Recent Drops</Text>
-                            {[
-                                { name: 'Jasani LLC', address: '305, 3rd Floor, Building 3, Bay Square, Business Bay' },
-                                { name: 'Rashed Al Shamsi Advertising', address: 'Behind Haneefa Supermarket, Diera,' },
-                                { name: 'Rashed Al Shamsi Advertising', address: 'Behind Haneefa Supermarket, Diera,' },
-                                { name: 'Nerds Company LLC', address: 'Behind Dubai Garden,Al Quoz' },
-                                { name: 'Wisam Sign', address: 'Industrial Area 2, Sharjah' },
-                            ].map((item, index) => (
+                    <>
+                        <TouchableOpacity
+                            style={styles.dismissOverlay}
+                            activeOpacity={1}
+                            onPress={() => setShowDropdown(false)}
+                        />
+                        <Animated.View
+                            entering={FadeInDown.duration(300)}
+                            style={styles.dropdownOverlay}
+                        >
+                            <Text style={styles.recentDropsTitle}>Recent Locations</Text>
+                            {RECENT_LOCATIONS.map((item, index) => (
                                 <TouchableOpacity
                                     key={index}
                                     style={styles.dropdownItem}
                                     onPress={() => handleSelectLocation(item.name + ', ' + item.address)}
                                 >
-                                    <Text style={styles.dropdownItemName}>{item.name}</Text>
-                                    <Text style={styles.dropdownItemAddress}>{item.address}</Text>
+                                    <View style={styles.dropdownIconContainer}>
+                                        <Ionicons name="location-outline" size={20} color={Colors.primaryDark} />
+                                    </View>
+                                    <View style={styles.dropdownTextContainer}>
+                                        <Text style={styles.dropdownItemName}>{item.name}</Text>
+                                        <Text style={styles.dropdownItemAddress} numberOfLines={1}>
+                                            {item.address}
+                                        </Text>
+                                    </View>
                                 </TouchableOpacity>
                             ))}
-                        </View>
-                    </View>
+                        </Animated.View>
+                    </>
                 )}
 
-                {/* Scrollable Content (Map + Form) */}
-                <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 40, paddingTop: 10 }}>
-
+                {/* Scrollable Content */}
+                <ScrollView
+                    showsVerticalScrollIndicator={false}
+                    contentContainerStyle={{ paddingBottom: 40, paddingTop: 10 }}
+                >
                     {/* Map View */}
-                    <View style={styles.mapContainer}>
+                    <Animated.View
+                        entering={FadeInDown.delay(400).duration(600)}
+                        style={styles.mapContainer}
+                    >
                         <Image
                             source={require('../../../assets/images/map-placeholder.png')}
                             style={{ width: '100%', height: '100%' }}
                             resizeMode="cover"
                         />
-                    </View>
+                        <View style={styles.mapOverlay}>
+                            <PickupIcon size={40} />
+                        </View>
+                    </Animated.View>
 
                     {/* Form */}
-                    <View style={styles.formContainer}>
-                        <TextInput
-                            style={styles.inputField}
-                            placeholder="More details (landmark, flat no.)"
-                            placeholderTextColor="#999"
+                    <Animated.View
+                        entering={FadeInDown.delay(500).duration(600)}
+                        style={styles.formContainer}
+                    >
+                        <CustomInput
+                            label="Additional Details"
+                            placeholder="Landmark, flat no., building name"
+                            value={details}
+                            onChangeText={setDetails}
+                            icon={<Ionicons name="information-circle-outline" size={20} color="#999" />}
                         />
-                        <TextInput
-                            style={styles.inputField}
-                            placeholder="Name of the person"
-                            placeholderTextColor="#999"
-                        />
-                        <View style={styles.phoneInputContainer}>
-                            <TextInput
-                                style={[styles.inputField, { marginBottom: 0 }]}
-                                placeholder="+971"
-                                placeholderTextColor="#999"
-                            />
-                        </View>
 
-                        <TouchableOpacity style={styles.continueButton} onPress={() => router.push('/(user)/user/drop-location')}>
+                        <CustomInput
+                            label="Contact Person"
+                            placeholder="Name of the person"
+                            value={personName}
+                            onChangeText={setPersonName}
+                            icon={<Ionicons name="person-outline" size={20} color="#999" />}
+                        />
+
+                        <CustomInput
+                            label="Phone Number"
+                            placeholder="+971 XX XXX XXXX"
+                            value={phone}
+                            onChangeText={setPhone}
+                            keyboardType="phone-pad"
+                            icon={<Ionicons name="call-outline" size={20} color="#999" />}
+                        />
+
+                        <TouchableOpacity
+                            style={styles.continueButton}
+                            onPress={() => router.push('/(user)/user/drop-location')}
+                            activeOpacity={0.8}
+                        >
                             <Text style={styles.continueButtonText}>Continue to Drop Location</Text>
+                            <Ionicons name="arrow-forward" size={24} color="#000" />
                         </TouchableOpacity>
-                    </View>
+                    </Animated.View>
                 </ScrollView>
             </View>
         </View>
@@ -171,161 +230,134 @@ const styles = StyleSheet.create({
         paddingBottom: 20,
     },
     backButton: {
-        padding: 4,
+        padding: 8,
+        backgroundColor: '#fff',
+        borderRadius: 20,
     },
     headerTitle: {
-        fontSize: 24,
-        fontWeight: '900',
-        fontStyle: 'italic',
+        fontSize: 18,
+        fontWeight: '700',
         color: '#2C3E50',
     },
     card: {
         flex: 1,
         backgroundColor: '#fff',
-        borderTopLeftRadius: 30,
-        borderTopRightRadius: 30,
-        paddingHorizontal: 20,
-        paddingTop: 20,
+        borderTopLeftRadius: 32,
+        borderTopRightRadius: 32,
+        paddingHorizontal: 24,
+        paddingTop: 32,
     },
     stepperContainer: {
         flexDirection: 'row',
         alignItems: 'flex-start',
-        marginBottom: 20,
-        paddingHorizontal: 0,
+        marginBottom: 32,
     },
     stepItem: {
         alignItems: 'center',
         zIndex: 1,
-        flex: 1,
+        width: 60,
     },
     stepCircle: {
-        width: 30,
-        height: 30,
-        borderRadius: 15,
-        backgroundColor: '#E0E0E0',
+        width: 32,
+        height: 32,
+        borderRadius: 16,
         alignItems: 'center',
         justifyContent: 'center',
-        marginBottom: 4,
+        marginBottom: 8,
     },
     stepActive: {
         backgroundColor: Colors.primary,
     },
     stepInactive: {
-        backgroundColor: '#E0E0E0',
+        backgroundColor: '#F5F5F5',
+        borderWidth: 1,
+        borderColor: '#E0E0E0',
     },
     stepNumber: {
         fontSize: 14,
         fontWeight: 'bold',
-        color: '#333',
+        color: '#999',
     },
     stepLabel: {
-        fontSize: 10,
+        fontSize: 11,
         color: '#999',
-        fontWeight: '500',
+        fontWeight: '600',
         textAlign: 'center',
     },
     stepLabelActive: {
-        color: '#333',
-        fontWeight: '700',
+        color: Colors.text,
     },
     stepLabelInactive: {
-        color: '#999',
+        color: '#ccc',
     },
     stepLineContainer: {
         flex: 1,
-        marginHorizontal: 0,
-        marginTop: 14,
-        borderWidth: 1,
-        borderColor: '#E0E0E0',
-        borderStyle: 'dashed',
-        height: 1,
+        height: 2,
+        backgroundColor: '#F0F0F0',
+        marginTop: 15,
+        marginHorizontal: -10,
     },
-
-    // Page Title
+    stepLineFill: {
+        height: '100%',
+        backgroundColor: Colors.primary,
+    },
     titleSection: {
         flexDirection: 'row',
         alignItems: 'center',
-        marginBottom: 16,
+        marginBottom: 24,
     },
     locationIconContainer: {
-        marginRight: 12,
+        marginRight: 16,
     },
     pageTitle: {
-        fontSize: 18,
-        fontWeight: '700',
-        color: '#2C3E50',
+        fontSize: 20,
+        fontWeight: '800',
+        color: Colors.text,
     },
     pageSubtitle: {
         fontSize: 14,
         color: '#999',
     },
-
     searchContainer: {
         marginBottom: 16,
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
-        elevation: 3,
-        backgroundColor: '#fff',
-        borderRadius: 25,
-    },
-    searchInput: {
-        height: 50,
-        backgroundColor: '#fff',
-        borderRadius: 25,
-        paddingHorizontal: 20,
-        fontSize: 14,
-        color: '#333',
-        borderWidth: 1,
-        borderColor: '#F0F0F0',
     },
     mapContainer: {
         height: 250,
-        borderRadius: 16,
+        borderRadius: 20,
         overflow: 'hidden',
-        marginBottom: 20,
+        marginBottom: 24,
         backgroundColor: '#EEE',
+        position: 'relative',
     },
-    mapPlaceholder: {
-        flex: 1,
-        alignItems: 'center',
-        justifyContent: 'center',
-        backgroundColor: '#E3F2FD',
+    mapOverlay: {
+        position: 'absolute',
+        top: '50%',
+        left: '50%',
+        transform: [{ translateX: -20 }, { translateY: -20 }],
     },
-
     formContainer: {
-        gap: 12,
-    },
-    inputField: {
-        height: 50,
-        backgroundColor: '#fff',
-        borderWidth: 1,
-        borderColor: '#E0E0E0',
-        borderRadius: 25,
-        paddingHorizontal: 20,
-        fontSize: 14,
-        color: '#333',
-        // @ts-ignore
-        outlineWidth: 0,
-    },
-    phoneInputContainer: {
-        marginBottom: 20,
+        gap: 4,
     },
     continueButton: {
         backgroundColor: Colors.primary,
-        height: 50,
-        borderRadius: 25,
+        flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
-        marginTop: 10,
+        height: 56,
+        borderRadius: 28,
+        gap: 8,
+        marginTop: 16,
+        shadowColor: Colors.primary,
+        shadowOffset: { width: 0, height: 8 },
+        shadowOpacity: 0.4,
+        shadowRadius: 12,
+        elevation: 8,
     },
     continueButtonText: {
         fontSize: 16,
-        fontWeight: 'bold',
-        color: '#333',
+        fontWeight: '800',
+        color: '#000',
     },
-
     dismissOverlay: {
         position: 'absolute',
         top: 0,
@@ -337,52 +369,52 @@ const styles = StyleSheet.create({
     },
     dropdownOverlay: {
         position: 'absolute',
-        top: 240,
-        left: 20,
-        right: 20,
+        top: 260,
+        left: 24,
+        right: 24,
         backgroundColor: '#fff',
-        borderRadius: 12,
+        borderRadius: 20,
         zIndex: 20,
         shadowColor: "#000",
         shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.15,
         shadowRadius: 12,
         elevation: 5,
-        paddingBottom: 8,
-    },
-    dropdownHeaderItem: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        padding: 16,
-        borderBottomWidth: 1,
-        borderBottomColor: '#F5F5F5',
-    },
-    dropdownHeaderText: {
-        fontSize: 14,
-        fontWeight: '700',
-        color: '#2C3E50',
-    },
-    recentDropsSection: {
-        paddingTop: 12,
+        paddingVertical: 12,
+        maxHeight: 300,
     },
     recentDropsTitle: {
         fontSize: 12,
         color: '#999',
-        fontWeight: '600',
+        fontWeight: '700',
         paddingHorizontal: 16,
         marginBottom: 8,
+        textTransform: 'uppercase',
     },
     dropdownItem: {
+        flexDirection: 'row',
+        alignItems: 'center',
         paddingVertical: 12,
         paddingHorizontal: 16,
         borderBottomWidth: 1,
         borderBottomColor: '#F9F9F9',
     },
+    dropdownIconContainer: {
+        width: 36,
+        height: 36,
+        borderRadius: 18,
+        backgroundColor: '#F0FFF0',
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginRight: 12,
+    },
+    dropdownTextContainer: {
+        flex: 1,
+    },
     dropdownItemName: {
         fontSize: 14,
         fontWeight: '700',
-        color: '#333',
+        color: Colors.text,
         marginBottom: 2,
     },
     dropdownItemAddress: {

@@ -1,104 +1,167 @@
 import { Ionicons } from '@expo/vector-icons';
-import { Stack } from 'expo-router';
-import { FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { Colors, Fonts } from '../../constants/Colors';
+import { Stack, useRouter } from 'expo-router';
+import { ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import Animated, { FadeInDown } from 'react-native-reanimated';
+import { DropoffIcon, PickupIcon } from '../../components/LocationIcons';
+import { Colors } from '../../constants/Colors';
 
 const MOCK_ORDERS = [
     {
         id: '1',
         status: 'Delivered',
-        date: 'Oct 24, 2023 • 10:30 AM',
-        from: 'Dubai Mall',
-        to: 'Marina Towers',
+        date: 'Oct 24, 2023',
+        time: '10:30 AM',
+        from: 'Dubai Mall, Downtown',
+        to: 'Marina Towers, Dubai Marina',
         price: 'AED 35.00',
-        items: 'Electronics',
+        vehicle: 'Bike',
+        orderId: '#ORD-2023-1001',
     },
     {
         id: '2',
         status: 'In Transit',
-        date: 'Today • 2:15 PM',
-        from: 'Business Bay',
-        to: 'JLT Cluster V',
+        date: 'Today',
+        time: '2:15 PM',
+        from: 'Business Bay, Tower A',
+        to: 'JLT Cluster V, Office 305',
         price: 'AED 28.50',
-        items: 'Documents',
+        vehicle: 'Car',
+        orderId: '#ORD-2023-1002',
     },
     {
         id: '3',
         status: 'Cancelled',
-        date: 'Oct 20, 2023 • 09:00 AM',
+        date: 'Oct 20, 2023',
+        time: '09:00 AM',
         from: 'Deira City Center',
-        to: 'Al Barsha 1',
+        to: 'Al Barsha 1, Villa 23',
         price: 'AED 42.00',
-        items: 'Gifts',
-    }
+        vehicle: 'Truck',
+        orderId: '#ORD-2023-1003',
+    },
 ];
 
+const getStatusConfig = (status: string) => {
+    switch (status) {
+        case 'Delivered':
+            return {
+                bg: '#E8F5E9',
+                text: '#2E7D32',
+                icon: 'checkmark-circle' as const
+            };
+        case 'In Transit':
+            return {
+                bg: '#E3F2FD',
+                text: '#1565C0',
+                icon: 'bicycle' as const
+            };
+        case 'Cancelled':
+            return {
+                bg: '#FFEBEE',
+                text: '#C62828',
+                icon: 'close-circle' as const
+            };
+        default:
+            return {
+                bg: '#F5F5F5',
+                text: '#616161',
+                icon: 'time' as const
+            };
+    }
+};
+
 export default function OrdersScreen() {
-    const renderOrder = ({ item }: { item: typeof MOCK_ORDERS[0] }) => (
-        <TouchableOpacity style={styles.orderCard}>
-            <View style={styles.orderHeader}>
-                <View style={[styles.statusBadge, getStatusStyle(item.status)]}>
-                    <Text style={[styles.statusText, getStatusTextStyle(item.status)]}>{item.status}</Text>
-                </View>
-                <Text style={styles.price}>{item.price}</Text>
-            </View>
+    const router = useRouter();
 
-            <View style={styles.locationContainer}>
-                <View style={styles.locationRow}>
-                    <Ionicons name="location-outline" size={16} color={Colors.icon} />
-                    <Text style={styles.locationText}>{item.from}</Text>
-                </View>
-                <View style={styles.connector} />
-                <View style={styles.locationRow}>
-                    <Ionicons name="flag-outline" size={16} color={Colors.icon} />
-                    <Text style={styles.locationText}>{item.to}</Text>
-                </View>
-            </View>
+    const renderOrder = (item: typeof MOCK_ORDERS[0], index: number) => {
+        const statusConfig = getStatusConfig(item.status);
 
-            <View style={styles.divider} />
+        return (
+            <Animated.View
+                key={item.id}
+                entering={FadeInDown.delay(index * 100).duration(600)}
+            >
+                <TouchableOpacity
+                    style={styles.orderCard}
+                    onPress={() => router.push(`/(user)/user/order-details?id=${item.id}`)}
+                    activeOpacity={0.7}
+                >
+                    {/* Header */}
+                    <View style={styles.orderHeader}>
+                        <View style={[styles.statusBadge, { backgroundColor: statusConfig.bg }]}>
+                            <Ionicons name={statusConfig.icon} size={16} color={statusConfig.text} />
+                            <Text style={[styles.statusText, { color: statusConfig.text }]}>
+                                {item.status}
+                            </Text>
+                        </View>
+                        <Text style={styles.orderId}>{item.orderId}</Text>
+                    </View>
 
-            <View style={styles.footer}>
-                <Text style={styles.date}>{item.date}</Text>
-                <Text style={styles.items}>{item.items}</Text>
-            </View>
-        </TouchableOpacity>
-    );
+                    {/* Locations */}
+                    <View style={styles.locationContainer}>
+                        <View style={styles.locationRow}>
+                            <PickupIcon size={20} />
+                            <View style={styles.locationTextContainer}>
+                                <Text style={styles.locationLabel}>Pickup</Text>
+                                <Text style={styles.locationText} numberOfLines={1}>
+                                    {item.from}
+                                </Text>
+                            </View>
+                        </View>
+
+                        <View style={styles.connector} />
+
+                        <View style={styles.locationRow}>
+                            <DropoffIcon size={20} />
+                            <View style={styles.locationTextContainer}>
+                                <Text style={styles.locationLabel}>Dropoff</Text>
+                                <Text style={styles.locationText} numberOfLines={1}>
+                                    {item.to}
+                                </Text>
+                            </View>
+                        </View>
+                    </View>
+
+                    <View style={styles.divider} />
+
+                    {/* Footer */}
+                    <View style={styles.footer}>
+                        <View style={styles.footerLeft}>
+                            <Ionicons name="calendar-outline" size={14} color="#999" />
+                            <Text style={styles.dateText}>{item.date} • {item.time}</Text>
+                        </View>
+                        <View style={styles.footerRight}>
+                            <View style={styles.vehicleBadge}>
+                                <Ionicons name="car-outline" size={12} color={Colors.primaryDark} />
+                                <Text style={styles.vehicleText}>{item.vehicle}</Text>
+                            </View>
+                            <Text style={styles.price}>{item.price}</Text>
+                        </View>
+                    </View>
+                </TouchableOpacity>
+            </Animated.View>
+        );
+    };
 
     return (
         <View style={styles.container}>
             <Stack.Screen options={{ headerShown: false }} />
+            <StatusBar barStyle="dark-content" />
+
             <View style={styles.header}>
                 <Text style={styles.title}>My Orders</Text>
+                <Text style={styles.subtitle}>{MOCK_ORDERS.length} orders in total</Text>
             </View>
 
-            <FlatList
-                data={MOCK_ORDERS}
-                renderItem={renderOrder}
-                keyExtractor={item => item.id}
-                contentContainerStyle={styles.listContent}
+            <ScrollView
                 showsVerticalScrollIndicator={false}
-            />
+                contentContainerStyle={styles.listContent}
+            >
+                {MOCK_ORDERS.map((item, index) => renderOrder(item, index))}
+            </ScrollView>
         </View>
     );
 }
-
-const getStatusStyle = (status: string) => {
-    switch (status) {
-        case 'Delivered': return { backgroundColor: '#E8F5E9' };
-        case 'In Transit': return { backgroundColor: '#E3F2FD' };
-        case 'Cancelled': return { backgroundColor: '#FFEBEE' };
-        default: return { backgroundColor: '#F5F5F5' };
-    }
-};
-
-const getStatusTextStyle = (status: string) => {
-    switch (status) {
-        case 'Delivered': return { color: '#2E7D32' };
-        case 'In Transit': return { color: '#1565C0' };
-        case 'Cancelled': return { color: '#C62828' };
-        default: return { color: '#616161' };
-    }
-};
 
 const styles = StyleSheet.create({
     container: {
@@ -108,26 +171,32 @@ const styles = StyleSheet.create({
     },
     header: {
         paddingHorizontal: 24,
-        marginBottom: 20,
+        marginBottom: 24,
     },
     title: {
-        fontFamily: Fonts.black,
         fontSize: 32,
+        fontWeight: '800',
         color: Colors.text,
+        marginBottom: 4,
+    },
+    subtitle: {
+        fontSize: 14,
+        color: '#999',
     },
     listContent: {
         padding: 24,
+        paddingTop: 0,
         gap: 16,
     },
     orderCard: {
         backgroundColor: '#fff',
-        borderRadius: 16,
-        padding: 16,
+        borderRadius: 20,
+        padding: 20,
         shadowColor: "#000",
         shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.05,
-        shadowRadius: 10,
-        elevation: 2,
+        shadowOpacity: 0.08,
+        shadowRadius: 12,
+        elevation: 3,
     },
     orderHeader: {
         flexDirection: 'row',
@@ -136,57 +205,93 @@ const styles = StyleSheet.create({
         marginBottom: 16,
     },
     statusBadge: {
+        flexDirection: 'row',
+        alignItems: 'center',
         paddingHorizontal: 12,
         paddingVertical: 6,
         borderRadius: 20,
+        gap: 6,
     },
     statusText: {
-        fontFamily: Fonts.medium,
-        fontSize: 12,
+        fontSize: 13,
+        fontWeight: '700',
     },
-    price: {
-        fontFamily: Fonts.bold,
-        fontSize: 16,
-        color: Colors.text,
+    orderId: {
+        fontSize: 12,
+        color: '#999',
+        fontWeight: '600',
     },
     locationContainer: {
-        gap: 4,
+        marginBottom: 16,
     },
     locationRow: {
         flexDirection: 'row',
-        alignItems: 'center',
-        gap: 8,
+        alignItems: 'flex-start',
+        gap: 12,
+    },
+    locationTextContainer: {
+        flex: 1,
+    },
+    locationLabel: {
+        fontSize: 11,
+        color: '#999',
+        fontWeight: '600',
+        marginBottom: 2,
+        textTransform: 'uppercase',
     },
     locationText: {
-        fontFamily: Fonts.medium,
         fontSize: 14,
+        fontWeight: '600',
         color: Colors.text,
     },
     connector: {
-        height: 12,
-        width: 1,
+        height: 16,
+        width: 2,
         backgroundColor: '#E0E0E0',
-        marginLeft: 7.5,
-        marginVertical: 2,
+        marginLeft: 9,
+        marginVertical: 4,
     },
     divider: {
         height: 1,
         backgroundColor: '#F0F0F0',
-        marginVertical: 16,
+        marginBottom: 16,
     },
     footer: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
     },
-    date: {
-        fontFamily: Fonts.regular,
-        fontSize: 12,
-        color: '#888',
+    footerLeft: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 6,
     },
-    items: {
-        fontFamily: Fonts.medium,
+    dateText: {
         fontSize: 12,
+        color: '#999',
+    },
+    footerRight: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 12,
+    },
+    vehicleBadge: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 4,
+        backgroundColor: '#F0FFF0',
+        paddingHorizontal: 8,
+        paddingVertical: 4,
+        borderRadius: 12,
+    },
+    vehicleText: {
+        fontSize: 11,
+        fontWeight: '600',
+        color: Colors.primaryDark,
+    },
+    price: {
+        fontSize: 16,
+        fontWeight: '800',
         color: Colors.text,
     },
 });

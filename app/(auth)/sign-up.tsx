@@ -1,25 +1,24 @@
-
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, ScrollView, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
 import { Button } from '../../components/Button';
 import { Colors } from '../../constants/Colors';
 import { useAuth } from '../../context/AuthContext';
 
-
-
 export default function SignUpScreen() {
     const router = useRouter();
-
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
     const [phone, setPhone] = useState('');
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
     const [loading, setLoading] = useState(false);
-    const { signIn } = useAuth();
 
-    // ...
+    // Focus states
+    const [focusedInput, setFocusedInput] = useState<string | null>(null);
+
+    const { signIn } = useAuth();
 
     const handleSignUp = async () => {
         setLoading(true);
@@ -28,80 +27,95 @@ export default function SignUpScreen() {
         router.replace('/(user)/user');
     };
 
+    const InputField = ({ label, value, onChangeText, placeholder, secureTextEntry = false, keyboardType = 'default', id }: any) => (
+        <View style={styles.inputContainer}>
+            <Text style={styles.label}>{label}</Text>
+            <View style={[
+                styles.inputWrapper,
+                focusedInput === id && styles.inputWrapperFocused
+            ]}>
+                <TextInput
+                    style={styles.input}
+                    placeholder={placeholder}
+                    value={value}
+                    onChangeText={onChangeText}
+                    secureTextEntry={secureTextEntry}
+                    keyboardType={keyboardType}
+                    autoCapitalize="none"
+                    onFocus={() => setFocusedInput(id)}
+                    onBlur={() => setFocusedInput(null)}
+                />
+            </View>
+        </View>
+    );
+
     return (
         <KeyboardAvoidingView
             style={styles.container}
             behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         >
+            <StatusBar barStyle="dark-content" />
             <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-                <View style={styles.header}>
+                <Animated.View
+                    entering={FadeInUp.delay(200).duration(800)}
+                    style={styles.header}
+                >
                     <Text style={styles.title}>Create Account</Text>
                     <Text style={styles.subtitle}>Sign up to get started!</Text>
-                </View>
+                </Animated.View>
 
-                <View style={styles.form}>
+                <Animated.View
+                    entering={FadeInDown.delay(400).duration(800)}
+                    style={styles.form}
+                >
+                    <InputField
+                        id="name"
+                        label="Full Name"
+                        value={name}
+                        onChangeText={setName}
+                        placeholder="John Doe"
+                    />
 
+                    <InputField
+                        id="email"
+                        label="Email"
+                        value={email}
+                        onChangeText={setEmail}
+                        placeholder="user@example.com"
+                        keyboardType="email-address"
+                    />
 
-                    <View style={styles.inputContainer}>
-                        <Text style={styles.label}>Full Name</Text>
-                        <TextInput
-                            style={styles.input}
-                            placeholder="John Doe"
-                            value={name}
-                            onChangeText={setName}
-                            autoCapitalize="words"
-                        />
-                    </View>
+                    <InputField
+                        id="phone"
+                        label="Phone Number"
+                        value={phone}
+                        onChangeText={setPhone}
+                        placeholder="+971 XX XXX XXXX"
+                        keyboardType="phone-pad"
+                    />
 
-                    <View style={styles.inputContainer}>
-                        <Text style={styles.label}>Email</Text>
-                        <TextInput
-                            style={styles.input}
-                            placeholder="user@example.com"
-                            value={email}
-                            onChangeText={setEmail}
-                            autoCapitalize="none"
-                            keyboardType="email-address"
-                        />
-                    </View>
+                    <InputField
+                        id="password"
+                        label="Password"
+                        value={password}
+                        onChangeText={setPassword}
+                        placeholder="••••••••"
+                        secureTextEntry
+                    />
 
-                    <View style={styles.inputContainer}>
-                        <Text style={styles.label}>Phone Number</Text>
-                        <TextInput
-                            style={styles.input}
-                            placeholder="+971 XX XXX XXXX"
-                            value={phone}
-                            onChangeText={setPhone}
-                            keyboardType="phone-pad"
-                        />
-                    </View>
-
-                    <View style={styles.inputContainer}>
-                        <Text style={styles.label}>Password</Text>
-                        <TextInput
-                            style={styles.input}
-                            placeholder="••••••••"
-                            value={password}
-                            onChangeText={setPassword}
-                            secureTextEntry
-                        />
-                    </View>
-
-                    <View style={styles.inputContainer}>
-                        <Text style={styles.label}>Confirm Password</Text>
-                        <TextInput
-                            style={styles.input}
-                            placeholder="••••••••"
-                            value={confirmPassword}
-                            onChangeText={setConfirmPassword}
-                            secureTextEntry
-                        />
-                    </View>
+                    <InputField
+                        id="confirmPassword"
+                        label="Confirm Password"
+                        value={confirmPassword}
+                        onChangeText={setConfirmPassword}
+                        placeholder="••••••••"
+                        secureTextEntry
+                    />
 
                     <Button
                         title="Sign Up"
                         onPress={handleSignUp}
-                        style={{ marginTop: 24 }}
+                        style={styles.signUpButton}
                         loading={loading}
                     />
 
@@ -111,7 +125,7 @@ export default function SignUpScreen() {
                             <Text style={styles.linkText}>Sign In</Text>
                         </TouchableOpacity>
                     </View>
-                </View>
+                </Animated.View>
             </ScrollView>
         </KeyboardAvoidingView>
     );
@@ -127,12 +141,12 @@ const styles = StyleSheet.create({
         paddingTop: 60,
     },
     header: {
-        marginBottom: 40,
+        marginBottom: 32,
     },
     title: {
         fontSize: 32,
         fontWeight: '800',
-        color: '#000',
+        color: Colors.text,
         marginBottom: 8,
     },
     subtitle: {
@@ -148,57 +162,45 @@ const styles = StyleSheet.create({
     label: {
         fontSize: 14,
         fontWeight: '600',
-        color: '#333',
+        color: Colors.text,
         marginBottom: 8,
     },
-    roleContainer: {
-        flexDirection: 'row',
-        gap: 12,
-    },
-    roleButton: {
-        flex: 1,
-        height: 80,
-        borderWidth: 2,
-        borderColor: '#E0E0E0',
-        borderRadius: 12,
-        padding: 12,
+    inputWrapper: {
+        height: 56,
+        borderWidth: 1.5,
+        borderColor: '#EFEFEF',
+        borderRadius: 16,
+        backgroundColor: '#FAFAFA',
         justifyContent: 'center',
-        alignItems: 'center',
-        backgroundColor: '#F9F9F9',
     },
-    roleButtonActive: {
+    inputWrapperFocused: {
         borderColor: Colors.primary,
-        backgroundColor: Colors.primary,
-    },
-    roleButtonText: {
-        fontSize: 16,
-        fontWeight: '700',
-        color: '#333',
-        marginBottom: 4,
-    },
-    roleButtonTextActive: {
-        color: '#000',
-    },
-    roleButtonSubtext: {
-        fontSize: 12,
-        color: '#666',
-    },
-    roleButtonSubtextActive: {
-        color: '#2C3E50',
+        backgroundColor: '#fff',
+        shadowColor: Colors.primary,
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.1,
+        shadowRadius: 8,
+        elevation: 2,
     },
     input: {
-        height: 56,
-        borderWidth: 1,
-        borderColor: '#E0E0E0',
-        borderRadius: 12,
+        flex: 1,
         paddingHorizontal: 16,
         fontSize: 16,
-        backgroundColor: '#F9F9F9',
+        color: Colors.text,
+    },
+    signUpButton: {
+        marginTop: 12,
+        shadowColor: Colors.primary,
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 10,
+        elevation: 5,
     },
     footer: {
         flexDirection: 'row',
         justifyContent: 'center',
         marginTop: 24,
+        marginBottom: 40,
     },
     footerText: {
         color: '#666',

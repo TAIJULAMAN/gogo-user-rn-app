@@ -1,6 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Stack, useRouter } from 'expo-router';
-import { Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Alert, Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import Animated, { FadeInUp } from 'react-native-reanimated';
 import { Colors, Fonts } from '../../constants/Colors';
 import { useAuth } from '../../context/AuthContext';
 
@@ -43,39 +44,75 @@ export default function AccountScreen() {
                 <Text style={styles.title}>Account</Text>
             </View>
 
-            <View style={styles.profileSection}>
-                <View style={styles.avatarContainer}>
-                    <Text style={styles.avatarText}>JD</Text>
-                </View>
-                <View style={styles.profileInfo}>
-                    <Text style={styles.profileName}>John Doe</Text>
-                    <Text style={styles.profileEmail}>john.doe@example.com</Text>
-                    <View style={styles.memberBadge}>
-                        <Text style={styles.memberText}>Gold Member</Text>
+            <Animated.View
+                entering={FadeInUp.delay(200).duration(800)}
+                style={styles.profileSection}
+            >
+                <View style={styles.userInfo}>
+                    <View style={styles.avatarContainer}>
+                        <Image
+                            source={require('../../assets/avatar.jpg')}
+                            style={styles.avatarImage}
+                            resizeMode="cover"
+                        />
+                        <View style={styles.onlineIndicator} />
+                    </View>
+                    <View style={styles.profileInfo}>
+                        <Text style={styles.profileName}>Md Shah Aman</Text>
+                        <Text style={styles.profileEmail}>shah.aman@example.com</Text>
                     </View>
                 </View>
-                <TouchableOpacity style={styles.editButton}>
+                <TouchableOpacity
+                    style={styles.editButton}
+                    onPress={() => router.push('/(user)/user/edit-profile')}
+                >
                     <Ionicons name="pencil" size={20} color={Colors.text} />
                 </TouchableOpacity>
-            </View>
+            </Animated.View>
 
             <View style={styles.section}>
                 <Text style={styles.sectionHeader}>Settings</Text>
                 <View style={styles.card}>
-                    <MenuItem icon="notifications-outline" title="Notifications" />
+                    <MenuItem
+                        icon="notifications-outline"
+                        title="Notifications"
+                        onPress={() => router.push('/(user)/user/notifications')}
+                    />
                     <View style={styles.divider} />
-                    <MenuItem icon="lock-closed-outline" title="Privacy & Security" />
+                    <MenuItem
+                        icon="document-text-outline"
+                        title="Terms of Service"
+                        onPress={() => router.push('/(user)/user/terms-of-service')}
+                    />
                     <View style={styles.divider} />
-                    <MenuItem icon="language-outline" title="Language" />
+                    <MenuItem
+                        icon="information-circle-outline"
+                        title="About Us"
+                        onPress={() => router.push('/(user)/user/about-us')}
+                    />
+                    <View style={styles.divider} />
+                    <MenuItem
+                        icon="key-outline"
+                        title="Change Password"
+                        onPress={() => router.push('/(user)/user/change-password')}
+                    />
                 </View>
             </View>
 
             <View style={styles.section}>
                 <Text style={styles.sectionHeader}>Support</Text>
                 <View style={styles.card}>
-                    <MenuItem icon="help-circle-outline" title="Help Center" />
+                    <MenuItem
+                        icon="help-circle-outline"
+                        title="Help Center"
+                        onPress={() => router.push('/(user)/user/help-center')}
+                    />
                     <View style={styles.divider} />
-                    <MenuItem icon="chatbubble-ellipses-outline" title="Contact Us" />
+                    <MenuItem
+                        icon="chatbubble-ellipses-outline"
+                        title="Contact Us"
+                        onPress={() => router.push('/(user)/user/contact-us')}
+                    />
                 </View>
             </View>
 
@@ -111,22 +148,36 @@ const styles = StyleSheet.create({
     profileSection: {
         flexDirection: 'row',
         alignItems: 'center',
+        justifyContent: 'space-between',
         paddingHorizontal: 24,
         marginBottom: 32,
+    },
+    userInfo: {
+        flexDirection: 'row',
+        alignItems: 'center',
     },
     avatarContainer: {
         width: 80,
         height: 80,
         borderRadius: 40,
-        backgroundColor: Colors.primary,
-        justifyContent: 'center',
-        alignItems: 'center',
         marginRight: 16,
+        position: 'relative',
     },
-    avatarText: {
-        fontFamily: Fonts.black,
-        fontSize: 28,
-        color: Colors.text,
+    avatarImage: {
+        width: '100%',
+        height: '100%',
+        borderRadius: 40,
+    },
+    onlineIndicator: {
+        position: 'absolute',
+        bottom: 2,
+        right: 2,
+        width: 16,
+        height: 16,
+        borderRadius: 8,
+        backgroundColor: Colors.primaryDark,
+        borderWidth: 3,
+        borderColor: '#f8f9fa',
     },
     profileInfo: {
         flex: 1,
@@ -141,19 +192,6 @@ const styles = StyleSheet.create({
         fontFamily: Fonts.regular,
         fontSize: 14,
         color: '#666',
-        marginBottom: 8,
-    },
-    memberBadge: {
-        backgroundColor: '#FFF9C4',
-        paddingHorizontal: 8,
-        paddingVertical: 4,
-        borderRadius: 8,
-        alignSelf: 'flex-start',
-    },
-    memberText: {
-        fontFamily: Fonts.medium,
-        fontSize: 12,
-        color: '#FBC02D',
     },
     editButton: {
         width: 40,

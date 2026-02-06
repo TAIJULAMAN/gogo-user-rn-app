@@ -1,7 +1,8 @@
-
 import { useRouter } from 'expo-router';
-import { Image, StatusBar, StyleSheet, Text, View } from 'react-native';
+import { StatusBar, StyleSheet, View } from 'react-native';
+import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
 import { Button } from '../components/Button';
+import { Colors } from '../constants/Colors';
 
 export default function Onboarding2() {
     const router = useRouter();
@@ -29,16 +30,25 @@ export default function Onboarding2() {
             </View>
 
             <View style={styles.content}>
-                <Image
+                <Animated.Image
+                    entering={FadeInUp.delay(200).duration(1000).springify()}
                     source={require('../assets/quick.png')}
                     style={styles.image}
                     resizeMode="contain"
                 />
                 <View style={styles.textContainer}>
-                    <Text style={styles.title}>Quick & Easy</Text>
-                    <Text style={styles.description}>
+                    <Animated.Text
+                        entering={FadeInDown.delay(400).duration(800)}
+                        style={styles.title}
+                    >
+                        Quick & Easy
+                    </Animated.Text>
+                    <Animated.Text
+                        entering={FadeInDown.delay(600).duration(800)}
+                        style={styles.description}
+                    >
                         Quick & Easy parcel delivery service.
-                    </Text>
+                    </Animated.Text>
                 </View>
             </View>
 
@@ -77,16 +87,16 @@ const styles = StyleSheet.create({
     },
     image: {
         width: '100%',
-        height: '60%',
+        height: '50%',
         marginBottom: 40,
     },
     textContainer: {
         alignItems: 'center',
     },
     title: {
-        fontSize: 28,
+        fontSize: 32,
         fontWeight: '800',
-        color: '#000',
+        color: Colors.text,
         textAlign: 'center',
         marginBottom: 16,
     },
@@ -98,7 +108,7 @@ const styles = StyleSheet.create({
     },
     footer: {
         paddingHorizontal: 20,
-        paddingBottom: 40,
+        paddingBottom: 50,
         gap: 20,
     },
     pagination: {
@@ -109,14 +119,20 @@ const styles = StyleSheet.create({
     dot: {
         height: 8,
         width: 8,
-        backgroundColor: '#ddd',
+        backgroundColor: '#E0E0E0',
         borderRadius: 4,
     },
     dotActive: {
         width: 24,
-        backgroundColor: '#BEFFB6',
+        backgroundColor: Colors.primary,
+        borderRadius: 4,
     },
     button: {
         width: '100%',
+        shadowColor: Colors.primary,
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 10,
+        elevation: 5,
     },
 });
