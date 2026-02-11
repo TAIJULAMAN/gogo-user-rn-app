@@ -182,6 +182,16 @@ export default function OrderDetailsScreen() {
                         <Ionicons name="receipt-outline" size={20} color={Colors.text} />
                         <Text style={styles.actionButtonText}>Download Receipt</Text>
                     </TouchableOpacity>
+
+                    {order.status === 'Delivered' && (
+                        <TouchableOpacity
+                            style={[styles.actionButton, styles.actionButtonPrimary]}
+                            onPress={() => router.push('/(user)/user/rate-driver')}
+                        >
+                            <Ionicons name="star-outline" size={20} color={Colors.text} />
+                            <Text style={styles.actionButtonText}>Rate Driver</Text>
+                        </TouchableOpacity>
+                    )}
                 </Animated.View>
             </ScrollView>
 

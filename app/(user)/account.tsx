@@ -71,6 +71,17 @@ export default function AccountScreen() {
             </Animated.View>
 
             <View style={styles.section}>
+                <Text style={styles.sectionHeader}>Saved</Text>
+                <View style={styles.card}>
+                    <MenuItem
+                        icon="location-outline"
+                        title="Saved Addresses"
+                        onPress={() => router.push('/(user)/user/address-book')}
+                    />
+                </View>
+            </View>
+
+            <View style={styles.section}>
                 <Text style={styles.sectionHeader}>Settings</Text>
                 <View style={styles.card}>
                     <MenuItem
@@ -83,6 +94,12 @@ export default function AccountScreen() {
                         icon="document-text-outline"
                         title="Terms of Service"
                         onPress={() => router.push('/(user)/user/terms-of-service')}
+                    />
+                    <View style={styles.divider} />
+                    <MenuItem
+                        icon="shield-checkmark-outline"
+                        title="Privacy Policy"
+                        onPress={() => router.push('/(user)/user/privacy-policy')}
                     />
                     <View style={styles.divider} />
                     <MenuItem
