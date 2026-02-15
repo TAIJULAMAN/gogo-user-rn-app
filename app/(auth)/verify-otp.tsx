@@ -33,7 +33,7 @@ export default function VerifyOTPScreen() {
         // Simulate API call
         setTimeout(() => {
             setLoading(false);
-            router.push('/(auth)/reset-password');
+            router.replace('/(user)/user');
         }, 1500);
     };
 
@@ -80,7 +80,7 @@ export default function VerifyOTPScreen() {
                 />
 
                 <View style={styles.footer}>
-                    <Text style={styles.footerText}>Didn't receive the code? </Text>
+                    <Text style={styles.footerText}>Didn&apos;t receive the code? </Text>
                     <TouchableOpacity onPress={handleResend}>
                         <Text style={styles.linkText}>Resend</Text>
                     </TouchableOpacity>

@@ -9,27 +9,26 @@ import { useAuth } from '../../context/AuthContext';
 export default function SignUpScreen() {
     const router = useRouter();
     const [name, setName] = useState('');
-    const [email, setEmail] = useState('');
     const [phone, setPhone] = useState('');
-    const [password, setPassword] = useState('');
-    const [confirmPassword, setConfirmPassword] = useState('');
+    const [address, setAddress] = useState('');
+    const [company, setCompany] = useState('');
     const [loading, setLoading] = useState(false);
 
     // Focus states
     const [focusedInput, setFocusedInput] = useState<string | null>(null);
 
-    const { signIn } = useAuth();
-
     const handleSignUp = async () => {
         setLoading(true);
-        await signIn('user');
-        setLoading(false);
-        router.replace('/(user)/user');
+        // Simulate API call
+        setTimeout(() => {
+            setLoading(false);
+            router.replace('/(user)/user');
+        }, 1500);
     };
 
-    const InputField = ({ label, value, onChangeText, placeholder, secureTextEntry = false, keyboardType = 'default', id }: any) => (
+    const InputField = ({ label, value, onChangeText, placeholder, secureTextEntry = false, keyboardType = 'default', id, optional = false }: any) => (
         <View style={styles.inputContainer}>
-            <Text style={styles.label}>{label}</Text>
+            <Text style={styles.label}>{label} {optional && <Text style={{ fontWeight: '400', fontSize: 12, color: '#999' }}>(Optional)</Text>}</Text>
             <View style={[
                 styles.inputWrapper,
                 focusedInput === id && styles.inputWrapperFocused
@@ -77,15 +76,6 @@ export default function SignUpScreen() {
                     />
 
                     <InputField
-                        id="email"
-                        label="Email"
-                        value={email}
-                        onChangeText={setEmail}
-                        placeholder="user@example.com"
-                        keyboardType="email-address"
-                    />
-
-                    <InputField
                         id="phone"
                         label="Phone Number"
                         value={phone}
@@ -95,33 +85,32 @@ export default function SignUpScreen() {
                     />
 
                     <InputField
-                        id="password"
-                        label="Password"
-                        value={password}
-                        onChangeText={setPassword}
-                        placeholder="••••••••"
-                        secureTextEntry
+                        id="address"
+                        label="Address"
+                        value={address}
+                        onChangeText={setAddress}
+                        placeholder="Apartment, Studio, or Floor"
+                        optional
                     />
 
                     <InputField
-                        id="confirmPassword"
-                        label="Confirm Password"
-                        value={confirmPassword}
-                        onChangeText={setConfirmPassword}
-                        placeholder="••••••••"
-                        secureTextEntry
+                        id="company"
+                        label="Company Information"
+                        value={company}
+                        onChangeText={setCompany}
+                        placeholder="Company Name"
+                        optional
                     />
 
                     <Button
                         title="Sign Up"
-                        onPress={handleSignUp}
+                        onPress={() => router.push('/(auth)/sign-in')}
                         style={styles.signUpButton}
                         loading={loading}
                     />
-
                     <View style={styles.footer}>
                         <Text style={styles.footerText}>Already have an account? </Text>
-                        <TouchableOpacity onPress={() => router.back()}>
+                        <TouchableOpacity onPress={() => router.push('/(auth)/sign-in')}>
                             <Text style={styles.linkText}>Sign In</Text>
                         </TouchableOpacity>
                     </View>

@@ -8,20 +8,23 @@ import { useAuth } from '../../context/AuthContext';
 
 export default function SignInScreen() {
     const router = useRouter();
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
+    const [phone, setPhone] = useState('');
     const [loading, setLoading] = useState(false);
-    const [isEmailFocused, setIsEmailFocused] = useState(false);
-    const [isPasswordFocused, setIsPasswordFocused] = useState(false);
+    const [isPhoneFocused, setIsPhoneFocused] = useState(false);
 
-    const { signIn } = useAuth();
+    const { signIn } = useAuth(); // You might need to update AuthContext to handle phone-only sign-in if it doesn't already
 
     const handleSignIn = async () => {
         setLoading(true);
-        setTimeout(async () => {
-            await signIn('user');
+        // Simulate sending OTP
+        setTimeout(() => {
             setLoading(false);
-            router.replace('/(user)/user');
+            // Navigate to Verify OTP screen, passing the phone number if needed
+            // For now, we'll just push to the existing verify-otp route
+            router.push({
+                pathname: '/(auth)/verify-otp',
+                params: { phone }
+            });
         }, 1500);
     };
 
@@ -37,8 +40,8 @@ export default function SignInScreen() {
                     entering={FadeInUp.delay(200).duration(800)}
                     style={styles.header}
                 >
-                    <Text style={styles.title}>Let's Sign You In</Text>
-                    <Text style={styles.subtitle}>Welcome back, you've been missed!</Text>
+                    <Text style={styles.title}>Welcome Back</Text>
+                    <Text style={styles.subtitle}>Enter your phone number to continue</Text>
                 </Animated.View>
 
                 <View style={styles.form}>
@@ -46,54 +49,27 @@ export default function SignInScreen() {
                         entering={FadeInDown.delay(400).duration(800)}
                         style={styles.inputContainer}
                     >
-                        <Text style={styles.label}>Email or Phone Number</Text>
+                        <Text style={styles.label}>Phone Number</Text>
                         <View style={[
                             styles.inputWrapper,
-                            isEmailFocused && styles.inputWrapperFocused
+                            isPhoneFocused && styles.inputWrapperFocused
                         ]}>
                             <TextInput
                                 style={styles.input}
-                                placeholder="user@example.com"
-                                value={email}
-                                onChangeText={setEmail}
+                                placeholder="+971 XX XXX XXXX"
+                                value={phone}
+                                onChangeText={setPhone}
+                                keyboardType="phone-pad"
                                 autoCapitalize="none"
-                                onFocus={() => setIsEmailFocused(true)}
-                                onBlur={() => setIsEmailFocused(false)}
+                                onFocus={() => setIsPhoneFocused(true)}
+                                onBlur={() => setIsPhoneFocused(false)}
                             />
                         </View>
                     </Animated.View>
 
-                    <Animated.View
-                        entering={FadeInDown.delay(600).duration(800)}
-                        style={styles.inputContainer}
-                    >
-                        <Text style={styles.label}>Password</Text>
-                        <View style={[
-                            styles.inputWrapper,
-                            isPasswordFocused && styles.inputWrapperFocused
-                        ]}>
-                            <TextInput
-                                style={styles.input}
-                                placeholder="••••••••"
-                                value={password}
-                                onChangeText={setPassword}
-                                secureTextEntry
-                                onFocus={() => setIsPasswordFocused(true)}
-                                onBlur={() => setIsPasswordFocused(false)}
-                            />
-                        </View>
-                    </Animated.View>
-
-                    <Animated.View entering={FadeInDown.delay(800).duration(800)}>
-                        <TouchableOpacity
-                            style={styles.forgotPassword}
-                            onPress={() => router.push('/(auth)/forgot-password')}
-                        >
-                            <Text style={styles.linkText}>Forgot Password?</Text>
-                        </TouchableOpacity>
-
+                    <Animated.View entering={FadeInDown.delay(600).duration(800)}>
                         <Button
-                            title="Sign In"
+                            title="Get OTP"
                             onPress={handleSignIn}
                             style={styles.signInButton}
                             loading={loading}
@@ -101,10 +77,10 @@ export default function SignInScreen() {
                     </Animated.View>
 
                     <Animated.View
-                        entering={FadeInDown.delay(1000).duration(800)}
+                        entering={FadeInDown.delay(800).duration(800)}
                         style={styles.footer}
                     >
-                        <Text style={styles.footerText}>Don't have an account? </Text>
+                        <Text style={styles.footerText}>Do not have an account? </Text>
                         <TouchableOpacity onPress={() => router.push('/(auth)/sign-up')}>
                             <Text style={styles.linkText}>Sign Up</Text>
                         </TouchableOpacity>
