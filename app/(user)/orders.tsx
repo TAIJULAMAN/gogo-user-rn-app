@@ -167,14 +167,14 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: '#f8f9fa',
-        paddingTop: 60,
+        paddingTop: 40,
     },
     header: {
-        paddingHorizontal: 24,
-        marginBottom: 24,
+        paddingHorizontal: 20,
+        marginBottom: 16,
     },
     title: {
-        fontSize: 32,
+        fontSize: 24,
         fontWeight: '800',
         color: Colors.text,
         marginBottom: 4,
@@ -184,14 +184,14 @@ const styles = StyleSheet.create({
         color: '#999',
     },
     listContent: {
-        padding: 24,
+        padding: 16,
         paddingTop: 0,
-        gap: 16,
+        gap: 12,
     },
     orderCard: {
         backgroundColor: '#fff',
-        borderRadius: 20,
-        padding: 20,
+        borderRadius: 16,
+        padding: 16,
         shadowColor: "#000",
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.08,
@@ -202,7 +202,7 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        marginBottom: 16,
+        marginBottom: 12,
     },
     statusBadge: {
         flexDirection: 'row',
@@ -222,7 +222,7 @@ const styles = StyleSheet.create({
         fontWeight: '600',
     },
     locationContainer: {
-        marginBottom: 16,
+        marginBottom: 12,
     },
     locationRow: {
         flexDirection: 'row',
@@ -254,7 +254,7 @@ const styles = StyleSheet.create({
     divider: {
         height: 1,
         backgroundColor: '#F0F0F0',
-        marginBottom: 16,
+        marginBottom: 12,
     },
     footer: {
         flexDirection: 'row',

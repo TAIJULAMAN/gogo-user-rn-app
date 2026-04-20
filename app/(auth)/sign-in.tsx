@@ -361,7 +361,7 @@ const styles = StyleSheet.create({
     color: "#333",
   },
   continueButton: {
-    backgroundColor: "#0047E0",
+    backgroundColor: "#abffaf",
     borderRadius: 12,
     height: 56,
     justifyContent: "center",
@@ -374,7 +374,7 @@ const styles = StyleSheet.create({
     elevation: 5,
   },
   continueButtonText: {
-    color: "#fff",
+    color: "#000",
     fontSize: 16,
     fontWeight: "700",
   },

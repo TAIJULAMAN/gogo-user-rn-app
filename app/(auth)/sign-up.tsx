@@ -366,7 +366,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   registerButton: {
-    backgroundColor: "#2B5FF5",
+    backgroundColor: "#abffaf",
     height: 50,
     borderRadius: 25,
     justifyContent: "center",
@@ -374,7 +374,7 @@ const styles = StyleSheet.create({
     marginBottom: 25,
   },
   registerButtonText: {
-    color: "#FFF",
+    color: "#000",
     fontSize: 15,
     fontWeight: "700",
   },
@@ -461,11 +461,11 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     marginLeft: 8,
     borderRadius: 24,
-    backgroundColor: "#2B5FF5",
+    backgroundColor: "#abffaf",
     alignItems: "center",
   },
   modalConfirmText: {
-    color: "#FFF",
+    color: "#000",
     fontWeight: "700",
     fontSize: 15,
   },
