@@ -1,305 +1,450 @@
 import { Ionicons } from '@expo/vector-icons';
-import { Stack, useRouter } from 'expo-router';
-import { Alert, Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import Animated, { FadeInUp } from 'react-native-reanimated';
-import { Colors, Fonts } from '../../constants/Colors';
-import { useAuth } from '../../context/AuthContext';
+import { useRouter } from 'expo-router';
+import React, { useState } from 'react';
+import {
+  Modal,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View
+} from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function AccountScreen() {
-    const { signOut } = useAuth();
-    const router = useRouter();
+  const router = useRouter();
+  const insets = useSafeAreaInsets();
 
-    const handleSignOut = async () => {
-        Alert.alert(
-            "Sign Out",
-            "Are you sure you want to sign out?",
-            [
-                { text: "Cancel", style: "cancel" },
-                {
-                    text: "Sign Out",
-                    style: "destructive",
-                    onPress: async () => {
-                        await signOut();
-                    }
-                }
-            ]
-        );
-    };
+  const [hasTaxDetails, setHasTaxDetails] = useState(false);
+  const [isTaxModalVisible, setIsTaxModalVisible] = useState(false);
 
-    const MenuItem = ({ icon, title, onPress, color = Colors.text }: { icon: any, title: string, onPress?: () => void, color?: string }) => (
-        <TouchableOpacity style={styles.menuItem} onPress={onPress}>
-            <View style={styles.menuIconContainer}>
-                <Ionicons name={icon} size={22} color={Colors.text} />
+  // Form states
+  const [trnNo, setTrnNo] = useState('');
+  const [trnAddress, setTrnAddress] = useState('');
+  const [companyName, setCompanyName] = useState('');
+
+  const handleConfirmTax = () => {
+    setHasTaxDetails(true);
+    setIsTaxModalVisible(false);
+  };
+
+  const handleLogout = () => {
+     // User logout logic here
+  };
+
+  return (
+    <View style={[styles.container, { paddingTop: insets.top }]}>
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
+        
+        {/* Background watermark icon (simulated) */}
+        <View style={styles.watermarkContainer}>
+           <Ionicons name="location" size={180} color="#FFFFFF" style={{ opacity: 0.5, transform: [{ rotate: '-15deg' }] }} />
+        </View>
+
+        {/* Top Header Section */}
+        <View style={styles.header}>
+          <TouchableOpacity 
+             style={styles.viewProfileBtn}
+             onPress={() => router.push('/(user)/profile-details')}
+          >
+            <Text style={styles.viewProfileText}>View</Text>
+            <Ionicons name="chevron-forward" size={14} color="#0052cc" style={{marginTop: 1}} />
+          </TouchableOpacity>
+
+          <Text style={styles.userName}>Roshan Hegde</Text>
+          <View style={styles.emailRow}>
+            <Text style={styles.emailText}>hshaaj@gmail.com</Text>
+            {hasTaxDetails ? (
+              <Ionicons name="checkmark-circle" size={16} color="#00C853" style={styles.verifiedIcon} />
+            ) : (
+              <TouchableOpacity>
+                 <Text style={styles.verifyText}>Verify</Text>
+              </TouchableOpacity>
+            )}
+          </View>
+
+          {hasTaxDetails ? (
+            <View style={styles.trnBadgeContainer}>
+              <Text style={styles.trnBadgeText}>TRN: {trnNo || '104143405900003'}</Text>
             </View>
-            <Text style={[styles.menuText, { color }]}>{title}</Text>
-            <Ionicons name="chevron-forward" size={20} color="#CCC" />
-        </TouchableOpacity>
-    );
-
-    return (
-        <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-            <Stack.Screen options={{ headerShown: false }} />
-
-            <View style={styles.header}>
-                <Text style={styles.title}>Account</Text>
-            </View>
-
-            <Animated.View
-                entering={FadeInUp.delay(200).duration(800)}
-                style={styles.profileSection}
+          ) : (
+            <TouchableOpacity 
+              style={styles.addTaxBtn}
+              onPress={() => setIsTaxModalVisible(true)}
             >
-                <View style={styles.userInfo}>
-                    <View style={styles.avatarContainer}>
-                        <Image
-                            source={require('../../assets/avatar.jpg')}
-                            style={styles.avatarImage}
-                            resizeMode="cover"
-                        />
-                        <View style={styles.onlineIndicator} />
-                    </View>
-                    <View style={styles.profileInfo}>
-                        <Text style={styles.profileName}>Md Shah Aman</Text>
-                        <Text style={styles.profileEmail}>shah.aman@example.com</Text>
-                    </View>
-                </View>
-                <TouchableOpacity
-                    style={styles.editButton}
-                    onPress={() => router.push('/(user)/user/edit-profile')}
-                >
-                    <Ionicons name="pencil" size={20} color={Colors.text} />
-                </TouchableOpacity>
-            </Animated.View>
+              <Ionicons name="add" size={16} color="#0052cc" />
+              <Text style={styles.addTaxBtnText}>Add Tax Details</Text>
+            </TouchableOpacity>
+          )}
+        </View>
 
-            <View style={styles.section}>
-                <Text style={styles.sectionHeader}>Share & Earn</Text>
-                <View style={styles.card}>
-                    <MenuItem
-                        icon="gift-outline"
-                        title="Referral"
-                        onPress={() => router.push('/(user)/user/referral')}
-                        color={Colors.primaryDark}
-                    />
-                </View>
+        {/* Two Card Row */}
+        <View style={styles.twoCardRow}>
+          <TouchableOpacity style={styles.gridCard}>
+            <View style={styles.iconCircle}>
+              <Ionicons name="heart" size={20} color="#334155" />
             </View>
+            <Text style={styles.gridCardText}>Saved Addresses</Text>
+          </TouchableOpacity>
 
-            <View style={styles.section}>
-                <Text style={styles.sectionHeader}>Saved</Text>
-                <View style={styles.card}>
-                    <MenuItem
-                        icon="location-outline"
-                        title="Saved Addresses"
-                        onPress={() => router.push('/(user)/user/address-book')}
-                    />
-                </View>
+          <TouchableOpacity style={styles.gridCard}>
+            <View style={styles.iconCircle}>
+              <Ionicons name="chatbubble" size={18} color="#334155" />
+              <Text style={styles.questionMarkOverlay}>?</Text>
             </View>
+            <Text style={styles.gridCardText}>Help & Support</Text>
+          </TouchableOpacity>
+        </View>
 
-            <View style={styles.section}>
-                <Text style={styles.sectionHeader}>Settings</Text>
-                <View style={styles.card}>
-                    <MenuItem
-                        icon="notifications-outline"
-                        title="Notifications"
-                        onPress={() => router.push('/(user)/user/notifications')}
-                    />
-                    <View style={styles.divider} />
-                    <MenuItem
-                        icon="document-text-outline"
-                        title="Terms of Service"
-                        onPress={() => router.push('/(user)/user/terms-of-service')}
-                    />
-                    <View style={styles.divider} />
-                    <MenuItem
-                        icon="shield-checkmark-outline"
-                        title="Privacy Policy"
-                        onPress={() => router.push('/(user)/user/privacy-policy')}
-                    />
-                    <View style={styles.divider} />
-                    <MenuItem
-                        icon="information-circle-outline"
-                        title="About Us"
-                        onPress={() => router.push('/(user)/user/about-us')}
-                    />
-                    <View style={styles.divider} />
-                    <MenuItem
-                        icon="key-outline"
-                        title="Change Password"
-                        onPress={() => router.push('/(user)/user/change-password')}
-                    />
-                </View>
+        {/* Refer and Earn Card */}
+        <View style={styles.referCard}>
+          <View style={styles.referCardLeft}>
+            <View style={[styles.iconCircle, { backgroundColor: '#F1F5F9' }]}>
+              <Ionicons name="gift" size={20} color="#334155" />
             </View>
+            <View style={styles.referTextCombo}>
+              <Text style={styles.referTitle}>Refer and earn</Text>
+              <Text style={styles.referTitle}>AED 10</Text>
+            </View>
+          </View>
+          <View style={styles.referCardRight}>
+            <TouchableOpacity style={styles.inviteBtn}>
+              <Ionicons name="share-social" size={16} color="#0052cc" />
+              <Text style={styles.inviteBtnText}>Invite</Text>
+            </TouchableOpacity>
+            <Ionicons name="chevron-forward" size={18} color="#94A3B8" />
+          </View>
+        </View>
 
-            <View style={styles.section}>
-                <Text style={styles.sectionHeader}>Support</Text>
-                <View style={styles.card}>
-                    <MenuItem
-                        icon="help-circle-outline"
-                        title="Help Center"
-                        onPress={() => router.push('/(user)/user/help-center')}
-                    />
-                    <View style={styles.divider} />
-                    <MenuItem
-                        icon="chatbubble-ellipses-outline"
-                        title="Contact Us"
-                        onPress={() => router.push('/(user)/user/contact-us')}
-                    />
-                </View>
+        {/* Menu Options List */}
+        <View style={styles.menuList}>
+          <TouchableOpacity style={styles.menuItem}>
+            <View style={[styles.iconCircle, { width: 36, height: 36, borderRadius: 18 }]}>
+              <Ionicons name="settings" size={18} color="#334155" />
             </View>
+            <Text style={styles.menuItemText}>Account Settings</Text>
+            <Ionicons name="chevron-forward" size={20} color="#94A3B8" />
+          </TouchableOpacity>
+          
+          <TouchableOpacity style={styles.menuItem}>
+            <View style={[styles.iconCircle, { width: 36, height: 36, borderRadius: 18 }]}>
+              <Ionicons name="document-text" size={18} color="#334155" />
+            </View>
+            <Text style={styles.menuItemText}>Terms & Conditions</Text>
+            <Ionicons name="chevron-forward" size={20} color="#94A3B8" />
+          </TouchableOpacity>
 
-            <View style={styles.section}>
-                <TouchableOpacity style={[styles.card, styles.logoutButton]} onPress={handleSignOut}>
-                    <Ionicons name="log-out-outline" size={24} color="#FF3B30" />
-                    <Text style={styles.logoutText}>Sign Out</Text>
-                </TouchableOpacity>
+          <TouchableOpacity style={styles.menuItem} onPress={handleLogout}>
+            <View style={[styles.iconCircle, { width: 36, height: 36, borderRadius: 18 }]}>
+              <Ionicons name="log-out" size={18} color="#334155" style={{ marginLeft: 4 }} />
             </View>
+            <Text style={styles.menuItemText}>Logout</Text>
+            <Ionicons name="chevron-forward" size={20} color="#94A3B8" />
+          </TouchableOpacity>
+        </View>
 
-            <View style={styles.versionContainer}>
-                <Text style={styles.versionText}>Version 1.0.0</Text>
-            </View>
-        </ScrollView>
-    );
+        {/* Version Text */}
+        <Text style={styles.versionText}>App version 6.57.1</Text>
+        
+      </ScrollView>
+
+      {/* Add Tax Modal */}
+      <Modal
+        visible={isTaxModalVisible}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => setIsTaxModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          {/* Close button outside modal */}
+          <TouchableOpacity 
+             style={styles.modalCloseOutBtn}
+             onPress={() => setIsTaxModalVisible(false)}
+          >
+            <Ionicons name="close" size={24} color="#000" />
+          </TouchableOpacity>
+
+          <View style={styles.modalContainer}>
+            <Text style={styles.modalTitle}>Add UAE Tax Document</Text>
+            
+            <TextInput
+              style={styles.inputField}
+              placeholder="TRN No."
+              placeholderTextColor="#94A3B8"
+              value={trnNo}
+              onChangeText={setTrnNo}
+              keyboardType="number-pad"
+            />
+            
+            <TextInput
+              style={styles.inputField}
+              placeholder="TRN Address"
+              placeholderTextColor="#94A3B8"
+              value={trnAddress}
+              onChangeText={setTrnAddress}
+            />
+            
+            <TextInput
+              style={styles.inputField}
+              placeholder="Name / Company Name"
+              placeholderTextColor="#94A3B8"
+              value={companyName}
+              onChangeText={setCompanyName}
+            />
+            
+            <TouchableOpacity style={styles.confirmBtn} onPress={handleConfirmTax}>
+              <Text style={styles.confirmBtnText}>Confirm</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+    </View>
+  );
 }
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: '#f8f9fa',
-        paddingTop: 60,
-    },
-    header: {
-        paddingHorizontal: 24,
-        marginBottom: 24,
-    },
-    title: {
-        fontFamily: Fonts.black,
-        fontSize: 32,
-        color: Colors.text,
-    },
-    profileSection: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        paddingHorizontal: 24,
-        marginBottom: 32,
-    },
-    userInfo: {
-        flexDirection: 'row',
-        alignItems: 'center',
-    },
-    avatarContainer: {
-        width: 80,
-        height: 80,
-        borderRadius: 40,
-        marginRight: 16,
-        position: 'relative',
-    },
-    avatarImage: {
-        width: '100%',
-        height: '100%',
-        borderRadius: 40,
-    },
-    onlineIndicator: {
-        position: 'absolute',
-        bottom: 2,
-        right: 2,
-        width: 16,
-        height: 16,
-        borderRadius: 8,
-        backgroundColor: Colors.primaryDark,
-        borderWidth: 3,
-        borderColor: '#f8f9fa',
-    },
-    profileInfo: {
-        flex: 1,
-    },
-    profileName: {
-        fontFamily: Fonts.bold,
-        fontSize: 20,
-        color: Colors.text,
-        marginBottom: 4,
-    },
-    profileEmail: {
-        fontFamily: Fonts.regular,
-        fontSize: 14,
-        color: '#666',
-    },
-    editButton: {
-        width: 40,
-        height: 40,
-        borderRadius: 20,
-        backgroundColor: '#fff',
-        justifyContent: 'center',
-        alignItems: 'center',
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
-        elevation: 2,
-    },
-    section: {
-        paddingHorizontal: 24,
-        marginBottom: 24,
-    },
-    sectionHeader: {
-        fontFamily: Fonts.bold,
-        fontSize: 18,
-        color: Colors.text,
-        marginBottom: 12,
-        marginLeft: 4,
-    },
-    card: {
-        backgroundColor: '#fff',
-        borderRadius: 16,
-        padding: 8,
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.05,
-        shadowRadius: 10,
-        elevation: 2,
-    },
-    menuItem: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        padding: 16,
-    },
-    menuIconContainer: {
-        width: 36,
-        height: 36,
-        borderRadius: 10,
-        backgroundColor: '#F5F5F5',
-        justifyContent: 'center',
-        alignItems: 'center',
-        marginRight: 16,
-    },
-    menuText: {
-        flex: 1,
-        fontFamily: Fonts.medium,
-        fontSize: 16,
-        color: Colors.text,
-    },
-    divider: {
-        height: 1,
-        backgroundColor: '#F5F5F5',
-        marginLeft: 68,
-    },
-    logoutButton: {
-        flexDirection: 'row',
-        justifyContent: 'center',
-        alignItems: 'center',
-        padding: 16,
-        gap: 8,
-    },
-    logoutText: {
-        fontFamily: Fonts.bold,
-        fontSize: 16,
-        color: '#FF3B30',
-    },
-    versionContainer: {
-        alignItems: 'center',
-        marginBottom: 40,
-    },
-    versionText: {
-        fontFamily: Fonts.regular,
-        fontSize: 12,
-        color: '#CCC',
-    },
+  container: {
+    flex: 1,
+    backgroundColor: '#F3F5F9', // Soft light blue-grey
+  },
+  watermarkContainer: {
+    position: 'absolute',
+    top: -40,
+    left: -40,
+    opacity: 0.6,
+  },
+  scrollContent: {
+    padding: 20,
+    paddingBottom: 40,
+  },
+  header: {
+    alignItems: 'center',
+    marginBottom: 24,
+    marginTop: 20,
+    position: 'relative',
+  },
+  viewProfileBtn: {
+    position: 'absolute',
+    right: 0,
+    top: 0,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  viewProfileText: {
+    color: '#0052cc',
+    fontSize: 14,
+    fontWeight: '600',
+    marginRight: 2,
+  },
+  userName: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: '#1E293B',
+    marginBottom: 6,
+  },
+  emailRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  emailText: {
+    fontSize: 14,
+    color: '#64748B',
+    marginRight: 8,
+  },
+  verifyText: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#0052cc',
+  },
+  verifiedIcon: {
+    marginLeft: 4,
+  },
+  addTaxBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#0052cc',
+    backgroundColor: 'transparent',
+  },
+  addTaxBtnText: {
+    color: '#0052cc',
+    fontSize: 14,
+    fontWeight: '600',
+    marginLeft: 6,
+  },
+  trnBadgeContainer: {
+    backgroundColor: '#E6EFFF',
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+  },
+  trnBadgeText: {
+    color: '#003A99',
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  // Card Styles
+  twoCardRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 16,
+  },
+  gridCard: {
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    flex: 1,
+    padding: 20,
+    alignItems: 'center',
+    marginHorizontal: 5,
+    marginVertical: 4,
+  },
+  iconCircle: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: '#F1F5F9', // light grey circle
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 12,
+  },
+  questionMarkOverlay: {
+    position: 'absolute',
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: 'bold',
+    top: 13,
+  },
+  gridCardText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#1E293B',
+  },
+  referCard: {
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    padding: 16,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  referCardLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  referTextCombo: {
+    marginLeft: 12,
+  },
+  referTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#1E293B',
+    lineHeight: 22,
+  },
+  referCardRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  inviteBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#0052cc',
+    borderRadius: 20,
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    marginRight: 12,
+  },
+  inviteBtnText: {
+    color: '#0052cc',
+    fontSize: 14,
+    fontWeight: '600',
+    marginLeft: 6,
+  },
+  menuList: {
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    paddingVertical: 8,
+    marginBottom: 30,
+  },
+  menuItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+  },
+  menuItemText: {
+    flex: 1,
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#1E293B',
+    marginLeft: 16,
+  },
+  versionText: {
+    textAlign: 'center',
+    color: '#94A3B8',
+    fontSize: 14,
+    fontWeight: '600',
+    opacity: 0.6,
+  },
+  
+  // Modal styles
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'flex-end',
+    alignItems: 'center',
+  },
+  modalCloseOutBtn: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: '#fff',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 16,
+    alignSelf: 'flex-end',
+    marginRight: 16,
+  },
+  modalContainer: {
+    backgroundColor: '#fff',
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    padding: 24,
+    width: '100%',
+    paddingBottom: Platform.OS === 'ios' ? 40 : 24,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#1E293B',
+    marginBottom: 24,
+  },
+  inputField: {
+    backgroundColor: '#F8FAFC',
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 16,
+    fontSize: 16,
+    color: '#1E293B',
+    marginBottom: 16,
+  },
+  confirmBtn: {
+    backgroundColor: '#0052cc', // bright blue
+    borderRadius: 12,
+    paddingVertical: 16,
+    alignItems: 'center',
+    marginTop: 8,
+  },
+  confirmBtnText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '700',
+  },
 });
