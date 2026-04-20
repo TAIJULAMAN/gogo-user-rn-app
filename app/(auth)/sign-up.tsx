@@ -2,9 +2,9 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import {
-  Alert,
   Image,
   KeyboardAvoidingView,
+  Modal,
   Platform,
   ScrollView,
   StatusBar,
@@ -18,33 +18,27 @@ import Animated, { FadeInDown, FadeInUp } from "react-native-reanimated";
 
 export default function SignUpScreen() {
   const router = useRouter();
+
+  // Registration Form State
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
+  const [whatsappUpdate, setWhatsappUpdate] = useState(true);
+  const [requirement, setRequirement] = useState(
+    "I will be using Porter for :",
+  );
+  const [referralCode, setReferralCode] = useState("");
+  const [phoneNumber, setPhoneNumber] = useState("581315770");
+  const [newPhoneNumber, setNewPhoneNumber] = useState("");
 
-  const handleChangePress = () => {
-    if (Platform.OS === "web") {
-      const confirm = window.confirm(
-        "Are you sure you want to change your phone number? Any entered data will be lost.",
-      );
-      if (confirm) {
-        router.back();
-      }
-    } else {
-      Alert.alert(
-        "Change Phone Number",
-        "Are you sure you want to go back and change your phone number? Any entered data will be lost.",
-        [
-          { text: "Cancel", style: "cancel" },
-          {
-            text: "Change",
-            style: "destructive",
-            onPress: () => router.back(),
-          },
-        ],
-      );
-    }
-  };
+  // Modal Visibility State
+  const [showChangeModal, setShowChangeModal] = useState(false);
+  const [showRequirementModal, setShowRequirementModal] = useState(false);
+  const [showReferralModal, setShowReferralModal] = useState(false);
+
+  // Web fallback for outlines
+  const webOutline =
+    Platform.OS === "web" ? ({ outlineStyle: "none" } as any) : {};
 
   return (
     <KeyboardAvoidingView
@@ -74,8 +68,13 @@ export default function SignUpScreen() {
             style={styles.flag}
             resizeMode="cover"
           />
-          <Text style={styles.phoneNumber}>581315770</Text>
-          <TouchableOpacity onPress={handleChangePress}>
+          <Text style={styles.phoneNumber}>{phoneNumber}</Text>
+          <TouchableOpacity
+            onPress={() => {
+              setNewPhoneNumber(phoneNumber);
+              setShowChangeModal(true);
+            }}
+          >
             <Text style={styles.changeText}>CHANGE</Text>
           </TouchableOpacity>
         </Animated.View>
@@ -89,7 +88,7 @@ export default function SignUpScreen() {
           <View style={styles.row}>
             <View style={[styles.inputWrapper, { flex: 1, marginRight: 20 }]}>
               <TextInput
-                style={styles.bottomInput}
+                style={[styles.bottomInput, webOutline]}
                 placeholder="First name"
                 placeholderTextColor="#A0A0A0"
                 value={firstName}
@@ -98,7 +97,7 @@ export default function SignUpScreen() {
             </View>
             <View style={[styles.inputWrapper, { flex: 1 }]}>
               <TextInput
-                style={styles.bottomInput}
+                style={[styles.bottomInput, webOutline]}
                 placeholder="Last name"
                 placeholderTextColor="#A0A0A0"
                 value={lastName}
@@ -110,7 +109,7 @@ export default function SignUpScreen() {
           {/* Email */}
           <View style={styles.inputWrapper}>
             <TextInput
-              style={styles.bottomInput}
+              style={[styles.bottomInput, webOutline]}
               placeholder="Email Id"
               placeholderTextColor="#A0A0A0"
               value={email}
@@ -123,28 +122,156 @@ export default function SignUpScreen() {
           {/* Requirement Dropdown */}
           <View style={styles.requirementWrapper}>
             <Text style={styles.smallLabel}>Requirement</Text>
-            <TouchableOpacity style={styles.dropdownButton}>
-              <Text style={styles.dropdownValue}>
-                I will be using Porter for :
+            <TouchableOpacity
+              style={styles.dropdownButton}
+              onPress={() => setShowRequirementModal(true)}
+            >
+              <Text
+                style={[
+                  styles.dropdownValue,
+                  requirement !== "I will be using Porter for :" && {
+                    color: "#000",
+                    fontWeight: "600",
+                  },
+                ]}
+              >
+                {requirement}
               </Text>
               <Ionicons name="chevron-down" size={16} color="#999" />
             </TouchableOpacity>
           </View>
 
           {/* Referral Code */}
-          <TouchableOpacity style={styles.referralContainer}>
-            <Text style={styles.referralText}>Have referral code ?</Text>
+          <TouchableOpacity
+            style={styles.referralContainer}
+            onPress={() => setShowReferralModal(true)}
+          >
+            <Text style={styles.referralText}>
+              {referralCode
+                ? `Referral Code: ${referralCode}`
+                : `Have referral code ?`}
+            </Text>
           </TouchableOpacity>
 
           {/* Register Button */}
           <TouchableOpacity
             style={styles.registerButton}
-            onPress={() => router.replace("/(tabs)")}
+            onPress={() => router.replace("/sign-in")}
           >
             <Text style={styles.registerButtonText}>REGISTER</Text>
           </TouchableOpacity>
         </Animated.View>
       </ScrollView>
+
+      {/* ---------------- MODALS ---------------- */}
+
+      {/* Change Phone Number Custom Popup */}
+      <Modal visible={showChangeModal} transparent animationType="fade">
+        <KeyboardAvoidingView
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          style={styles.modalOverlay}
+        >
+          <View style={styles.modalBox}>
+            <Text style={styles.modalTitle}>Change Phone Number</Text>
+            <Text style={styles.modalText}>
+              Enter your new phone number below.
+            </Text>
+            <TextInput
+              style={[styles.modalInput, webOutline]}
+              placeholder="New Phone Number"
+              value={newPhoneNumber}
+              onChangeText={setNewPhoneNumber}
+              keyboardType="phone-pad"
+            />
+            <View style={styles.modalButtons}>
+              <TouchableOpacity
+                style={styles.modalCancel}
+                onPress={() => setShowChangeModal(false)}
+              >
+                <Text style={styles.modalCancelText}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.modalConfirm}
+                onPress={() => {
+                  if (newPhoneNumber.trim().length > 0) {
+                    setPhoneNumber(newPhoneNumber.trim());
+                  }
+                  setShowChangeModal(false);
+                }}
+              >
+                <Text style={styles.modalConfirmText}>Save</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </KeyboardAvoidingView>
+      </Modal>
+
+      {/* Requirement Selection Popup */}
+      <Modal visible={showRequirementModal} transparent animationType="fade">
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalBox}>
+            <Text style={styles.modalTitle}>Select Requirement</Text>
+            <TouchableOpacity
+              style={styles.modalOption}
+              onPress={() => {
+                setRequirement("User");
+                setShowRequirementModal(false);
+              }}
+            >
+              <Text style={styles.modalOptionText}>User</Text>
+            </TouchableOpacity>
+            <View style={styles.modalSeparator} />
+            <TouchableOpacity
+              style={styles.modalOption}
+              onPress={() => {
+                setRequirement("Rider");
+                setShowRequirementModal(false);
+              }}
+            >
+              <Text style={styles.modalOptionText}>Rider</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.modalCancelFull}
+              onPress={() => setShowRequirementModal(false)}
+            >
+              <Text style={styles.modalCancelText}>Cancel</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Referral Code Popup */}
+      <Modal visible={showReferralModal} transparent animationType="fade">
+        <KeyboardAvoidingView
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          style={styles.modalOverlay}
+        >
+          <View style={styles.modalBox}>
+            <Text style={styles.modalTitle}>Enter Referral Code</Text>
+            <TextInput
+              style={[styles.modalInput, webOutline]}
+              placeholder="Referral Code"
+              value={referralCode}
+              onChangeText={setReferralCode}
+              autoCapitalize="characters"
+            />
+            <View style={styles.modalButtons}>
+              <TouchableOpacity
+                style={styles.modalCancel}
+                onPress={() => setShowReferralModal(false)}
+              >
+                <Text style={styles.modalCancelText}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.modalConfirm}
+                onPress={() => setShowReferralModal(false)}
+              >
+                <Text style={styles.modalConfirmText}>Apply</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </KeyboardAvoidingView>
+      </Modal>
     </KeyboardAvoidingView>
   );
 }
@@ -184,7 +311,7 @@ const styles = StyleSheet.create({
   },
   changeText: {
     fontSize: 13,
-    color: "#2B5FF5", // Vibrant blue for CHANGE text
+    color: "#2B5FF5",
     fontWeight: "700",
     textTransform: "uppercase",
   },
@@ -279,5 +406,98 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: "#999",
     lineHeight: 18,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 24,
+  },
+  modalBox: {
+    width: "100%",
+    backgroundColor: "#fff",
+    borderRadius: 20,
+    padding: 24,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 10,
+    elevation: 8,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: "700",
+    color: "#000",
+    marginBottom: 16,
+    textAlign: "center",
+  },
+  modalText: {
+    fontSize: 14,
+    color: "#666",
+    marginBottom: 24,
+    textAlign: "center",
+    lineHeight: 20,
+  },
+  modalButtons: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+  },
+  modalCancel: {
+    flex: 1,
+    paddingVertical: 14,
+    marginRight: 8,
+    borderRadius: 24,
+    backgroundColor: "#F2F2F2",
+    alignItems: "center",
+  },
+  modalCancelText: {
+    color: "#333",
+    fontWeight: "700",
+    fontSize: 15,
+  },
+  modalConfirm: {
+    flex: 1,
+    paddingVertical: 14,
+    marginLeft: 8,
+    borderRadius: 24,
+    backgroundColor: "#2B5FF5",
+    alignItems: "center",
+  },
+  modalConfirmText: {
+    color: "#FFF",
+    fontWeight: "700",
+    fontSize: 15,
+  },
+  modalOption: {
+    paddingVertical: 16,
+    alignItems: "center",
+  },
+  modalOptionText: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#000",
+  },
+  modalSeparator: {
+    height: 1,
+    backgroundColor: "#EFEFEF",
+    width: "100%",
+  },
+  modalCancelFull: {
+    marginTop: 16,
+    paddingVertical: 14,
+    borderRadius: 24,
+    backgroundColor: "#F2F2F2",
+    alignItems: "center",
+  },
+  modalInput: {
+    borderWidth: 1,
+    borderColor: "#E0E0E0",
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    fontSize: 15,
+    marginBottom: 24,
+    backgroundColor: "#FAFAFA",
   },
 });
