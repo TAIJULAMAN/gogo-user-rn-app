@@ -1,7 +1,6 @@
-
-import { FontAwesome5, Ionicons } from '@expo/vector-icons';
-import { Tabs } from 'expo-router';
-import { Colors } from '../../constants/Colors';
+import { FontAwesome5, Ionicons } from "@expo/vector-icons";
+import { Tabs } from "expo-router";
+import { Colors } from "../../constants/Colors";
 
 export default function TabLayout() {
   return (
@@ -13,7 +12,7 @@ export default function TabLayout() {
           height: 90,
           paddingBottom: 20,
           paddingTop: 10,
-          backgroundColor: '#fff',
+          backgroundColor: "#fff",
           shadowColor: "#000",
           shadowOffset: {
             width: 0,
@@ -26,35 +25,50 @@ export default function TabLayout() {
         headerShown: false,
         tabBarLabelStyle: {
           fontSize: 12,
-          fontWeight: '600',
-        }
-      }}>
+          fontWeight: "600",
+        },
+      }}
+    >
       <Tabs.Screen
         name="user"
         options={{
-          title: 'GOGO',
-          tabBarIcon: ({ color }) => <FontAwesome5 name="motorcycle" size={24} color={color} />,
+          title: "GOGO",
+          tabBarIcon: ({ color }) => (
+            <FontAwesome5 name="motorcycle" size={24} color={color} />
+          ),
         }}
       />
       <Tabs.Screen
         name="orders"
         options={{
-          title: 'ORDERS',
-          tabBarIcon: ({ color }) => <Ionicons name="bag-handle-outline" size={28} color={color} />,
+          title: "ORDERS",
+          tabBarIcon: ({ color }) => (
+            <Ionicons name="bag-handle-outline" size={28} color={color} />
+          ),
         }}
       />
       <Tabs.Screen
-        name="wallet"
+        name="transaction"
         options={{
-          title: 'WALLET',
-          tabBarIcon: ({ color }) => <Ionicons name="wallet-outline" size={28} color={color} />,
+          title: "TRANSACTION",
+          tabBarIcon: ({ color }) => (
+            <Ionicons name="wallet-outline" size={28} color={color} />
+          ),
         }}
       />
       <Tabs.Screen
         name="account"
         options={{
-          title: 'ACCOUNT',
-          tabBarIcon: ({ color }) => <Ionicons name="person-outline" size={28} color={color} />,
+          title: "ACCOUNT",
+          tabBarIcon: ({ color }) => (
+            <Ionicons name="person-outline" size={28} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="profile-details"
+        options={{
+          href: null,
         }}
       />
     </Tabs>

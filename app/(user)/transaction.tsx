@@ -38,7 +38,7 @@ const RECENT_TRANSACTIONS = [
   },
 ];
 
-export default function WalletScreen() {
+export default function TransactionScreen() {
   const router = useRouter();
 
   return (
@@ -51,7 +51,7 @@ export default function WalletScreen() {
           entering={FadeInUp.delay(100).duration(600)}
           style={styles.title}
         >
-          Wallet
+          Transactions
         </Animated.Text>
       </View>
 
