@@ -31,7 +31,8 @@ export default function AccountScreen() {
   };
 
   const handleLogout = () => {
-     // User logout logic here
+     // User logout logic here (e.g., clearing async storage or context)
+     router.replace('/(auth)/sign-in');
   };
 
   return (
@@ -40,18 +41,28 @@ export default function AccountScreen() {
         
         {/* Background watermark icon (simulated) */}
         <View style={styles.watermarkContainer}>
-           <Ionicons name="location" size={180} color="#FFFFFF" style={{ opacity: 0.5, transform: [{ rotate: '-15deg' }] }} />
+           <Ionicons name="person-circle-outline" size={240} color="#E2E8F0" style={{ opacity: 0.3, transform: [{ rotate: '-15deg' }] }} />
         </View>
 
         {/* Top Header Section */}
         <View style={styles.header}>
           <TouchableOpacity 
              style={styles.viewProfileBtn}
-             onPress={() => router.push('/(user)/profile-details')}
+             onPress={() => router.replace('/(user)/profile-details')}
           >
-            <Text style={styles.viewProfileText}>View</Text>
+            <Text style={styles.viewProfileText}>Edit</Text>
             <Ionicons name="chevron-forward" size={14} color="#0052cc" style={{marginTop: 1}} />
           </TouchableOpacity>
+
+          {/* Avatar Section */}
+          <View style={styles.avatarContainer}>
+            <View style={styles.avatarCircle}>
+              <Text style={styles.avatarInitials}>RH</Text>
+            </View>
+            <View style={styles.avatarBadge}>
+              <Ionicons name="star" size={12} color="#FFF" />
+            </View>
+          </View>
 
           <Text style={styles.userName}>Roshan Hegde</Text>
           <View style={styles.emailRow}>
@@ -59,7 +70,7 @@ export default function AccountScreen() {
             {hasTaxDetails ? (
               <Ionicons name="checkmark-circle" size={16} color="#00C853" style={styles.verifiedIcon} />
             ) : (
-              <TouchableOpacity>
+              <TouchableOpacity style={styles.verifyBtn}>
                  <Text style={styles.verifyText}>Verify</Text>
               </TouchableOpacity>
             )}
@@ -74,7 +85,7 @@ export default function AccountScreen() {
               style={styles.addTaxBtn}
               onPress={() => setIsTaxModalVisible(true)}
             >
-              <Ionicons name="add" size={16} color="#0052cc" />
+              <Ionicons name="document-text" size={18} color="#0052cc" />
               <Text style={styles.addTaxBtnText}>Add Tax Details</Text>
             </TouchableOpacity>
           )}
@@ -82,17 +93,22 @@ export default function AccountScreen() {
 
         {/* Two Card Row */}
         <View style={styles.twoCardRow}>
-          <TouchableOpacity style={styles.gridCard}>
-            <View style={styles.iconCircle}>
-              <Ionicons name="heart" size={20} color="#334155" />
+          <TouchableOpacity 
+            style={styles.gridCard}
+            onPress={() => router.push('/(user)/user/address-book')}
+          >
+            <View style={[styles.iconCircle, { backgroundColor: '#F0F9FF' }]}>
+              <Ionicons name="location" size={22} color="#0284C7" />
             </View>
             <Text style={styles.gridCardText}>Saved Addresses</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.gridCard}>
-            <View style={styles.iconCircle}>
-              <Ionicons name="chatbubble" size={18} color="#334155" />
-              <Text style={styles.questionMarkOverlay}>?</Text>
+          <TouchableOpacity 
+            style={styles.gridCard}
+            onPress={() => router.push('/(user)/user/help-center')}
+          >
+            <View style={[styles.iconCircle, { backgroundColor: '#FEF2F2' }]}>
+              <Ionicons name="headset" size={22} color="#DC2626" />
             </View>
             <Text style={styles.gridCardText}>Help & Support</Text>
           </TouchableOpacity>
@@ -101,47 +117,59 @@ export default function AccountScreen() {
         {/* Refer and Earn Card */}
         <View style={styles.referCard}>
           <View style={styles.referCardLeft}>
-            <View style={[styles.iconCircle, { backgroundColor: '#F1F5F9' }]}>
-              <Ionicons name="gift" size={20} color="#334155" />
+            <View style={[styles.iconCircle, { backgroundColor: '#FEF9C3', marginBottom: 0 }]}>
+              <Ionicons name="gift" size={22} color="#CA8A04" />
             </View>
             <View style={styles.referTextCombo}>
               <Text style={styles.referTitle}>Refer and earn</Text>
-              <Text style={styles.referTitle}>AED 10</Text>
+              <Text style={styles.referSubtitle}>Get AED 10 for each friend</Text>
             </View>
           </View>
           <View style={styles.referCardRight}>
-            <TouchableOpacity style={styles.inviteBtn}>
-              <Ionicons name="share-social" size={16} color="#0052cc" />
-              <Text style={styles.inviteBtnText}>Invite</Text>
-            </TouchableOpacity>
-            <Ionicons name="chevron-forward" size={18} color="#94A3B8" />
+             <TouchableOpacity 
+               style={styles.inviteBtn}
+               onPress={() => router.push('/(user)/user/referral')}
+             >
+               <Ionicons name="share-social" size={16} color="#fff" />
+               <Text style={styles.inviteBtnText}>Invite</Text>
+             </TouchableOpacity>
           </View>
         </View>
 
         {/* Menu Options List */}
         <View style={styles.menuList}>
-          <TouchableOpacity style={styles.menuItem}>
-            <View style={[styles.iconCircle, { width: 36, height: 36, borderRadius: 18 }]}>
-              <Ionicons name="settings" size={18} color="#334155" />
+          <TouchableOpacity 
+            style={styles.menuItem}
+            onPress={() => router.push('/(user)/user/edit-profile')}
+          >
+            <View style={[styles.menuIconCircle, { backgroundColor: '#F1F5F9' }]}>
+              <Ionicons name="settings" size={20} color="#475569" />
             </View>
             <Text style={styles.menuItemText}>Account Settings</Text>
-            <Ionicons name="chevron-forward" size={20} color="#94A3B8" />
+            <Ionicons name="chevron-forward" size={20} color="#CBD5E1" />
           </TouchableOpacity>
           
-          <TouchableOpacity style={styles.menuItem}>
-            <View style={[styles.iconCircle, { width: 36, height: 36, borderRadius: 18 }]}>
-              <Ionicons name="document-text" size={18} color="#334155" />
+          <View style={styles.menuDivider} />
+
+          <TouchableOpacity 
+            style={styles.menuItem}
+            onPress={() => router.push('/(user)/user/terms-of-service')}
+          >
+            <View style={[styles.menuIconCircle, { backgroundColor: '#F1F5F9' }]}>
+              <Ionicons name="document-text" size={20} color="#475569" />
             </View>
             <Text style={styles.menuItemText}>Terms & Conditions</Text>
-            <Ionicons name="chevron-forward" size={20} color="#94A3B8" />
+            <Ionicons name="chevron-forward" size={20} color="#CBD5E1" />
           </TouchableOpacity>
 
+          <View style={styles.menuDivider} />
+
           <TouchableOpacity style={styles.menuItem} onPress={handleLogout}>
-            <View style={[styles.iconCircle, { width: 36, height: 36, borderRadius: 18 }]}>
-              <Ionicons name="log-out" size={18} color="#334155" style={{ marginLeft: 4 }} />
+            <View style={[styles.menuIconCircle, { backgroundColor: '#FEF2F2' }]}>
+              <Ionicons name="log-out" size={20} color="#EF4444" style={{ marginLeft: 3 }} />
             </View>
-            <Text style={styles.menuItemText}>Logout</Text>
-            <Ionicons name="chevron-forward" size={20} color="#94A3B8" />
+            <Text style={[styles.menuItemText, { color: '#EF4444' }]}>Logout</Text>
+            <Ionicons name="chevron-forward" size={20} color="#CBD5E1" />
           </TouchableOpacity>
         </View>
 
@@ -158,16 +186,18 @@ export default function AccountScreen() {
         onRequestClose={() => setIsTaxModalVisible(false)}
       >
         <View style={styles.modalOverlay}>
-          {/* Close button outside modal */}
           <TouchableOpacity 
              style={styles.modalCloseOutBtn}
              onPress={() => setIsTaxModalVisible(false)}
           >
-            <Ionicons name="close" size={24} color="#000" />
+            <Ionicons name="close" size={24} color="#1E293B" />
           </TouchableOpacity>
 
           <View style={styles.modalContainer}>
-            <Text style={styles.modalTitle}>Add UAE Tax Document</Text>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Add UAE Tax Document</Text>
+              <Text style={styles.modalSubtitle}>Please enter your TRN details</Text>
+            </View>
             
             <TextInput
               style={styles.inputField}
@@ -195,7 +225,7 @@ export default function AccountScreen() {
             />
             
             <TouchableOpacity style={styles.confirmBtn} onPress={handleConfirmTax}>
-              <Text style={styles.confirmBtnText}>Confirm</Text>
+              <Text style={styles.confirmBtnText}>Confirm Details</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -207,12 +237,12 @@ export default function AccountScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F3F5F9', // Soft light blue-grey
+    backgroundColor: '#F8FAFC',
   },
   watermarkContainer: {
     position: 'absolute',
-    top: -40,
-    left: -40,
+    top: -20,
+    right: -40,
     opacity: 0.6,
   },
   scrollContent: {
@@ -222,40 +252,101 @@ const styles = StyleSheet.create({
   header: {
     alignItems: 'center',
     marginBottom: 24,
-    marginTop: 20,
+    marginTop: 10,
     position: 'relative',
+    backgroundColor: '#fff',
+    padding: 24,
+    borderRadius: 24,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#64748B',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.08,
+        shadowRadius: 12,
+      },
+      android: {
+        elevation: 3,
+      },
+      web: {
+        shadowColor: '#64748B',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.08,
+        shadowRadius: 12,
+      }
+    }),
   },
   viewProfileBtn: {
     position: 'absolute',
-    right: 0,
-    top: 0,
+    right: 20,
+    top: 20,
     flexDirection: 'row',
     alignItems: 'center',
+    padding: 8,
+    backgroundColor: '#EFF6FF',
+    borderRadius: 20,
   },
   viewProfileText: {
     color: '#0052cc',
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '600',
-    marginRight: 2,
+    marginRight: 4,
+    marginLeft: 4,
+  },
+  avatarContainer: {
+    position: 'relative',
+    marginBottom: 16,
+  },
+  avatarCircle: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: '#0052cc',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 4,
+    borderColor: '#EFF6FF',
+  },
+  avatarInitials: {
+    fontSize: 28,
+    fontWeight: '700',
+    color: '#fff',
+  },
+  avatarBadge: {
+    position: 'absolute',
+    bottom: 0,
+    right: 0,
+    backgroundColor: '#EAB308',
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: '#fff',
   },
   userName: {
-    fontSize: 24,
+    fontSize: 22,
     fontWeight: '700',
-    color: '#1E293B',
-    marginBottom: 6,
+    color: '#0F172A',
+    marginBottom: 4,
   },
   emailRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 16,
   },
   emailText: {
-    fontSize: 14,
+    fontSize: 15,
     color: '#64748B',
     marginRight: 8,
   },
+  verifyBtn: {
+    backgroundColor: '#EFF6FF',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 12,
+  },
   verifyText: {
-    fontSize: 14,
+    fontSize: 12,
     fontWeight: '700',
     color: '#0052cc',
   },
@@ -265,29 +356,35 @@ const styles = StyleSheet.create({
   addTaxBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 10,
-    paddingHorizontal: 16,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#0052cc',
-    backgroundColor: 'transparent',
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 12,
+    borderWidth: 1.5,
+    borderColor: '#E2E8F0',
+    backgroundColor: '#F8FAFC',
+    marginTop: 16,
+    borderStyle: 'dashed',
   },
   addTaxBtnText: {
     color: '#0052cc',
     fontSize: 14,
     fontWeight: '600',
-    marginLeft: 6,
+    marginLeft: 8,
   },
   trnBadgeContainer: {
-    backgroundColor: '#E6EFFF',
+    backgroundColor: '#EFF6FF',
     paddingVertical: 10,
     paddingHorizontal: 20,
-    borderRadius: 8,
+    borderRadius: 12,
+    marginTop: 16,
+    borderWidth: 1,
+    borderColor: '#BFDBFE',
   },
   trnBadgeText: {
-    color: '#003A99',
+    color: '#1E3A8A',
     fontSize: 14,
     fontWeight: '700',
+    letterSpacing: 0.5,
   },
   // Card Styles
   twoCardRow: {
@@ -297,55 +394,85 @@ const styles = StyleSheet.create({
   },
   gridCard: {
     backgroundColor: '#fff',
-    borderRadius: 16,
+    borderRadius: 20,
     flex: 1,
     padding: 20,
-    alignItems: 'center',
-    marginHorizontal: 5,
-    marginVertical: 4,
+    marginHorizontal: 4,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#64748B',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.05,
+        shadowRadius: 8,
+      },
+      android: {
+        elevation: 2,
+      },
+      web: {
+        shadowColor: '#64748B',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.05,
+        shadowRadius: 8,
+      }
+    }),
   },
   iconCircle: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: '#F1F5F9', // light grey circle
+    width: 48,
+    height: 48,
+    borderRadius: 24,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 12,
-  },
-  questionMarkOverlay: {
-    position: 'absolute',
-    color: '#fff',
-    fontSize: 12,
-    fontWeight: 'bold',
-    top: 13,
+    marginBottom: 16,
   },
   gridCardText: {
-    fontSize: 14,
+    fontSize: 15,
     fontWeight: '600',
-    color: '#1E293B',
+    color: '#0F172A',
   },
   referCard: {
     backgroundColor: '#fff',
-    borderRadius: 16,
-    padding: 16,
+    borderRadius: 20,
+    padding: 20,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: 24,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#64748B',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.05,
+        shadowRadius: 8,
+      },
+      android: {
+        elevation: 2,
+      },
+      web: {
+        shadowColor: '#64748B',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.05,
+        shadowRadius: 8,
+      }
+    }),
   },
   referCardLeft: {
     flexDirection: 'row',
     alignItems: 'center',
+    flex: 1,
   },
   referTextCombo: {
-    marginLeft: 12,
+    marginLeft: 16,
+    flex: 1,
   },
   referTitle: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#1E293B',
-    lineHeight: 22,
+    color: '#0F172A',
+    marginBottom: 2,
+  },
+  referSubtitle: {
+    fontSize: 13,
+    color: '#64748B',
   },
   referCardRight: {
     flexDirection: 'row',
@@ -354,93 +481,145 @@ const styles = StyleSheet.create({
   inviteBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#0052cc',
+    backgroundColor: '#0052cc',
     borderRadius: 20,
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    marginRight: 12,
+    paddingVertical: 10,
+    paddingHorizontal: 20,
   },
   inviteBtnText: {
-    color: '#0052cc',
+    color: '#fff',
     fontSize: 14,
     fontWeight: '600',
     marginLeft: 6,
   },
   menuList: {
     backgroundColor: '#fff',
-    borderRadius: 16,
+    borderRadius: 20,
     paddingVertical: 8,
     marginBottom: 30,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#64748B',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.05,
+        shadowRadius: 8,
+      },
+      android: {
+        elevation: 2,
+      },
+      web: {
+        shadowColor: '#64748B',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.05,
+        shadowRadius: 8,
+      }
+    }),
   },
   menuItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 14,
-    paddingHorizontal: 16,
+    paddingVertical: 16,
+    paddingHorizontal: 20,
+  },
+  menuIconCircle: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   menuItemText: {
     flex: 1,
     fontSize: 16,
     fontWeight: '600',
-    color: '#1E293B',
+    color: '#0F172A',
     marginLeft: 16,
+  },
+  menuDivider: {
+    height: 1,
+    backgroundColor: '#F1F5F9',
+    marginLeft: 76,
+    marginRight: 20,
   },
   versionText: {
     textAlign: 'center',
     color: '#94A3B8',
     fontSize: 14,
-    fontWeight: '600',
-    opacity: 0.6,
+    fontWeight: '500',
+    marginBottom: 20,
   },
   
   // Modal styles
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
+    backgroundColor: 'rgba(15, 23, 42, 0.6)',
     justifyContent: 'flex-end',
     alignItems: 'center',
   },
   modalCloseOutBtn: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     backgroundColor: '#fff',
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 16,
-    alignSelf: 'flex-end',
-    marginRight: 16,
   },
   modalContainer: {
     backgroundColor: '#fff',
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
+    borderTopLeftRadius: 28,
+    borderTopRightRadius: 28,
     padding: 24,
     width: '100%',
     paddingBottom: Platform.OS === 'ios' ? 40 : 24,
   },
-  modalTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#1E293B',
+  modalHeader: {
     marginBottom: 24,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#0F172A',
+    marginBottom: 4,
+  },
+  modalSubtitle: {
+    fontSize: 14,
+    color: '#64748B',
   },
   inputField: {
     backgroundColor: '#F8FAFC',
-    borderRadius: 12,
+    borderRadius: 16,
     paddingHorizontal: 16,
     paddingVertical: 16,
     fontSize: 16,
-    color: '#1E293B',
+    color: '#0F172A',
     marginBottom: 16,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
   },
   confirmBtn: {
-    backgroundColor: '#0052cc', // bright blue
-    borderRadius: 12,
+    backgroundColor: '#0052cc',
+    borderRadius: 16,
     paddingVertical: 16,
     alignItems: 'center',
     marginTop: 8,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#0052cc',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 8,
+      },
+      android: {
+        elevation: 4,
+      },
+      web: {
+        shadowColor: '#0052cc',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 8,
+      }
+    }),
   },
   confirmBtnText: {
     color: '#fff',
