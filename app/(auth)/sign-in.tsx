@@ -7,7 +7,6 @@ import {
   Image,
   KeyboardAvoidingView,
   Platform,
-  ScrollView,
   StatusBar,
   StyleSheet,
   Text,
@@ -25,40 +24,20 @@ import Animated, {
   withTiming,
 } from "react-native-reanimated";
 
-const { width, height } = Dimensions.get("window");
+import { OnboardingSlider } from "../../components/OnboardingSlider";
 
-const SLIDES = [
-  { id: "1", image: require("@/assets/quick.png") },
-  { id: "2", image: require("@/assets/secure.png") },
-  { id: "3", image: require("@/assets/vehicles/bike.png") },
-];
+import { SafeAreaView } from "react-native-safe-area-context";
+
+const { width, height } = Dimensions.get("window");
 
 export default function SignInScreen() {
   const router = useRouter();
   const [phone, setPhone] = useState("");
   const [isPhoneFocused, setIsPhoneFocused] = useState(false);
-  const [activeSlide, setActiveSlide] = useState(0);
-  const [sliderWidth, setSliderWidth] = useState(width);
-  const flatListRef = useRef<FlatList>(null);
   const textOpacity = useSharedValue(0);
   const logoScale = useSharedValue(0.8);
   const logoOpacity = useSharedValue(0);
   const textTranslateY = useSharedValue(20);
-  console.log(SLIDES[0]?.image);
-
-  const handleScroll = (event: any) => {
-    const scrollPosition = event.nativeEvent.contentOffset.x;
-    if (sliderWidth > 0) {
-      const slideIndex = Math.round(scrollPosition / sliderWidth);
-      if (
-        slideIndex !== activeSlide &&
-        slideIndex >= 0 &&
-        slideIndex < SLIDES.length
-      ) {
-        setActiveSlide(slideIndex);
-      }
-    }
-  };
 
   const handleContinue = () => {
     router.push({
@@ -68,32 +47,10 @@ export default function SignInScreen() {
   };
 
   useEffect(() => {
-    const autoPlayTimer = setInterval(() => {
-      setActiveSlide((prev) => {
-        const nextSlide = (prev + 1) % SLIDES.length;
-        if (flatListRef.current) {
-          flatListRef.current.scrollToIndex({
-            index: nextSlide,
-            animated: true,
-          });
-        }
-        return nextSlide;
-      });
-    }, 3000);
-
-    return () => clearInterval(autoPlayTimer);
-  }, [sliderWidth]);
-
-  useEffect(() => {
-    // Animate Logo
     logoOpacity.value = withTiming(1, { duration: 1000 });
     logoScale.value = withSpring(1);
-
-    // Animate Text with delay
     textOpacity.value = withDelay(500, withTiming(1, { duration: 800 }));
     textTranslateY.value = withDelay(500, withSpring(0));
-
-    // Removed the splash screen timeout to prevent an infinite loop on the sign in page
   }, []);
   const logoStyle = useAnimatedStyle(() => ({
     opacity: logoOpacity.value,
@@ -101,128 +58,86 @@ export default function SignInScreen() {
   }));
 
   return (
-    <KeyboardAvoidingView
-      style={styles.container}
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
-    >
-      <StatusBar barStyle="dark-content" />
-      <ScrollView contentContainerStyle={styles.scrollContent} bounces={false}>
-        {/* Logo Area */}
-        <Animated.View
-          entering={FadeInUp.delay(200).duration(800)}
-          style={styles.header}
-        >
-          <Animated.Image
-            source={require("../../assets/logo/logo.png")}
-            style={[styles.logo, logoStyle]}
-            resizeMode="contain"
-          />
-        </Animated.View>
+    <SafeAreaView style={styles.container}>
+      <KeyboardAvoidingView
+        style={styles.container}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+      >
+        <StatusBar barStyle="dark-content" />
+        <View style={styles.content}>
+          {/* Logo Area */}
+          <Animated.View
+            entering={FadeInUp.delay(200).duration(800)}
+            style={styles.header}
+          >
+            <Animated.Image
+              source={require("../../assets/logo/logo.png")}
+              style={[styles.logo, logoStyle]}
+              resizeMode="contain"
+            />
+          </Animated.View>
 
-        {/* Slider Area */}
-        <Animated.View
-          entering={FadeInUp.delay(400).duration(800)}
-          style={[styles.sliderContainer, { width: sliderWidth }]}
-          onLayout={(e) => {
-            const layoutWidth = e.nativeEvent.layout.width;
-            if (layoutWidth > 0) {
-              setSliderWidth(layoutWidth);
-            }
-          }}
-        >
-          <FlatList
-            ref={flatListRef}
-            style={{ flex: 1 }}
-            data={SLIDES}
-            horizontal
-            pagingEnabled
-            showsHorizontalScrollIndicator={false}
-            onScroll={handleScroll}
-            scrollEventThrottle={16}
-            bounces={false}
-            keyExtractor={(item) => item.id}
-            getItemLayout={(data, index) => ({
-              length: sliderWidth,
-              offset: sliderWidth * index,
-              index,
-            })}
-            renderItem={({ item }) => (
-              <View style={[styles.slide, { width: sliderWidth }]}>
+          {/* Slider Area */}
+          <OnboardingSlider />
+
+          {/* Bottom Card */}
+          <Animated.View
+            entering={FadeInDown.delay(600).duration(800)}
+            style={styles.bottomCard}
+          >
+            <Text style={styles.welcomeText}>Welcome 👋</Text>
+            <Text style={styles.subtitleText}>
+              With a valid number, you can access deliveries, and our other
+              services
+            </Text>
+
+            <View style={styles.inputContainer}>
+              <TouchableOpacity style={styles.countryPicker}>
                 <Image
-                  source={item.image}
-                  style={styles.slideImage}
-                  resizeMode="contain"
+                  source={{ uri: "https://flagcdn.com/w40/ae.png" }}
+                  style={{
+                    width: 24,
+                    height: 16,
+                    marginRight: 8,
+                    borderRadius: 2,
+                  }}
+                  resizeMode="cover"
+                />
+                <Text style={styles.callingCode}>+971</Text>
+                <Ionicons name="chevron-down" size={16} color="#666" />
+              </TouchableOpacity>
+
+              <View
+                style={[
+                  styles.phoneInputWrapper,
+                  isPhoneFocused && styles.phoneInputWrapperFocused,
+                ]}
+              >
+                <TextInput
+                  style={styles.phoneInput}
+                  placeholder="Mobile Number"
+                  placeholderTextColor="#A0A0A0"
+                  value={phone}
+                  onChangeText={setPhone}
+                  keyboardType="phone-pad"
+                  onFocus={() => setIsPhoneFocused(true)}
+                  onBlur={() => setIsPhoneFocused(false)}
                 />
               </View>
-            )}
-          />
-          <View style={styles.pagination}>
-            {SLIDES.map((_, index) => (
-              <View
-                key={index}
-                style={[styles.dot, activeSlide === index && styles.dotActive]}
-              />
-            ))}
-          </View>
-        </Animated.View>
-
-        {/* Bottom Card */}
-        <Animated.View
-          entering={FadeInDown.delay(600).duration(800)}
-          style={styles.bottomCard}
-        >
-          <Text style={styles.welcomeText}>Welcome 👋</Text>
-          <Text style={styles.subtitleText}>
-            With a valid number, you can access deliveries, and our other
-            services
-          </Text>
-
-          <View style={styles.inputContainer}>
-            <TouchableOpacity style={styles.countryPicker}>
-              <Image
-                source={{ uri: "https://flagcdn.com/w40/ae.png" }}
-                style={{
-                  width: 24,
-                  height: 16,
-                  marginRight: 8,
-                  borderRadius: 2,
-                }}
-                resizeMode="cover"
-              />
-              <Text style={styles.callingCode}>+971</Text>
-              <Ionicons name="chevron-down" size={16} color="#666" />
-            </TouchableOpacity>
-
-            <View
-              style={[
-                styles.phoneInputWrapper,
-                isPhoneFocused && styles.phoneInputWrapperFocused,
-              ]}
-            >
-              <TextInput
-                style={styles.phoneInput}
-                placeholder="Mobile Number"
-                placeholderTextColor="#A0A0A0"
-                value={phone}
-                onChangeText={setPhone}
-                keyboardType="phone-pad"
-                onFocus={() => setIsPhoneFocused(true)}
-                onBlur={() => setIsPhoneFocused(false)}
-              />
             </View>
-          </View>
 
-          {phone.length > 4 && (
-            <TouchableOpacity
-              style={styles.continueButton}
-              onPress={handleContinue}
-            >
-              <Text style={styles.continueButtonText}>Continue</Text>
-            </TouchableOpacity>
-          )}
-        </Animated.View>
-      </ScrollView>
-    </KeyboardAvoidingView>
+            {phone.length > 4 && (
+              <TouchableOpacity
+                style={styles.continueButton}
+                onPress={handleContinue}
+              >
+                <Text style={styles.continueButtonText}>Continue</Text>
+              </TouchableOpacity>
+            )}
+          </Animated.View>
+        </View>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 }
 
@@ -231,8 +146,8 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#fbfbfb",
   },
-  scrollContent: {
-    flexGrow: 1,
+  content: {
+    flex: 1,
     justifyContent: "space-between",
   },
   header: {
@@ -257,38 +172,6 @@ const styles = StyleSheet.create({
   logo: {
     width: 200,
     height: 80,
-  },
-  sliderContainer: {
-    height: height * 0.45,
-    width: "100%",
-    position: "relative",
-  },
-  slide: {
-    width,
-    height: "100%",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  slideImage: {
-    width: 300,
-    height: 300,
-  },
-  pagination: {
-    flexDirection: "row",
-    position: "absolute",
-    bottom: 0,
-    alignSelf: "center",
-  },
-  dot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: "#E0E0E0",
-    marginHorizontal: 4,
-  },
-  dotActive: {
-    backgroundColor: "#0047E0",
-    width: 24,
   },
   bottomCard: {
     marginTop: 20,
