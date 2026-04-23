@@ -2,10 +2,10 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useEffect, useRef, useState } from "react";
 import {
-  Dimensions,
   FlatList,
   Image,
   KeyboardAvoidingView,
+  Modal,
   Platform,
   StatusBar,
   StyleSheet,
@@ -14,6 +14,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { FirebaseRecaptchaVerifierModal } from "expo-firebase-recaptcha";
 import Animated, {
   FadeInDown,
   FadeInUp,
@@ -24,26 +25,116 @@ import Animated, {
   withTiming,
 } from "react-native-reanimated";
 
-import { OnboardingSlider } from "../../components/OnboardingSlider";
-
+import { Alert } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { OnboardingSlider } from "../../components/OnboardingSlider";
+import {
+  useCheckUserByPhoneMutation,
+  useLogInMutation,
+} from "../../Redux/features/auth/authApi";
 
-const { width, height } = Dimensions.get("window");
+import { COUNTRIES, Country } from "../../constants/countries";
+import { auth } from "../../config/firebaseConfig";
+import { RecaptchaVerifier, signInWithPhoneNumber } from "firebase/auth";
+
+declare global {
+  interface Window {
+    recaptchaVerifier: any;
+    confirmationResult: any;
+  }
+}
 
 export default function SignInScreen() {
   const router = useRouter();
   const [phone, setPhone] = useState("");
   const [isPhoneFocused, setIsPhoneFocused] = useState(false);
+  const [selectedCountry, setSelectedCountry] = useState<Country>(COUNTRIES[0]);
+  const [showCountryPicker, setShowCountryPicker] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const [isLoggingIn, setIsLoggingIn] = useState(false); // Manually handle logging state for better control
+
+  const recaptchaVerifier = useRef<FirebaseRecaptchaVerifierModal>(null);
+
+  const [checkUserByPhone, { isLoading: isChecking }] =
+    useCheckUserByPhoneMutation();
+  const [logInMutation] = useLogInMutation(); // Renamed to avoid confusion with the action
+
   const textOpacity = useSharedValue(0);
   const logoScale = useSharedValue(0.8);
   const logoOpacity = useSharedValue(0);
   const textTranslateY = useSharedValue(20);
 
-  const handleContinue = () => {
-    router.push({
-      pathname: "/(auth)/verify-otp",
-      params: { phone },
-    });
+  const filteredCountries = COUNTRIES.filter(
+    (country) =>
+      country.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      country.dialCode.includes(searchQuery),
+  );
+
+  const handleContinue = async () => {
+    if (!phone || phone.length < 8) {
+      Alert.alert("Error", "Please enter a valid phone number");
+      return;
+    }
+
+    const fullPhoneNumber = `${selectedCountry.dialCode}${phone}`;
+    setIsLoggingIn(true);
+
+    try {
+      // 1. Check if user exists
+      const checkResponse = await checkUserByPhone({
+        phoneNumber: fullPhoneNumber,
+      }).unwrap();
+
+      if (checkResponse?.data?.exists) {
+        console.log("User exists");
+
+        // 2. If exists, send a verification code using firebase
+        let confirmationResult;
+        if (Platform.OS === "web") {
+          const appVerifier = window.recaptchaVerifier;
+          confirmationResult = await signInWithPhoneNumber(
+            auth,
+            fullPhoneNumber,
+            appVerifier,
+          );
+        } else {
+          // Native implementation
+          if (!recaptchaVerifier.current) {
+            throw new Error("Recaptcha verifier not initialized");
+          }
+          confirmationResult = await signInWithPhoneNumber(
+            auth,
+            fullPhoneNumber,
+            recaptchaVerifier.current,
+          );
+        }
+        
+        window.confirmationResult = confirmationResult;
+
+        // 3. After step 2 complete log in and redirect to verify otp
+        await logInMutation({ phoneNumber: fullPhoneNumber }).unwrap();
+
+        router.push({
+          pathname: "/(auth)/verify-otp",
+          params: { phone: fullPhoneNumber },
+        });
+      } else {
+        // 4. If not exists, redirect to sign-up
+        router.push({
+          pathname: "/(auth)/sign-up",
+          params: { phone: fullPhoneNumber },
+        });
+      }
+    } catch (error: any) {
+      console.error("Auth flow error:", error);
+      Alert.alert(
+        "Error",
+        error?.message || error?.data?.message || "Something went wrong. Please try again.",
+      );
+    } finally {
+      setIsLoggingIn(false);
+    }
   };
 
   useEffect(() => {
@@ -51,7 +142,23 @@ export default function SignInScreen() {
     logoScale.value = withSpring(1);
     textOpacity.value = withDelay(500, withTiming(1, { duration: 800 }));
     textTranslateY.value = withDelay(500, withSpring(0));
+
+    // Initialize Recaptcha Verifier for Web
+    if (Platform.OS === "web") {
+      if (!window.recaptchaVerifier) {
+        window.recaptchaVerifier = new RecaptchaVerifier(auth, "recaptcha-container", {
+          size: "invisible",
+          callback: (response: any) => {
+            console.log("Recaptcha verified");
+          },
+          "expired-callback": () => {
+            console.log("Recaptcha expired");
+          },
+        });
+      }
+    }
   }, []);
+
   const logoStyle = useAnimatedStyle(() => ({
     opacity: logoOpacity.value,
     transform: [{ scale: logoScale.value }],
@@ -59,6 +166,14 @@ export default function SignInScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
+      {Platform.OS !== "web" && (
+        <FirebaseRecaptchaVerifierModal
+          ref={recaptchaVerifier}
+          firebaseConfig={auth.app.options}
+        />
+      )}
+      {/* Hidden Recaptcha Container for Web */}
+      {Platform.OS === "web" && <View id="recaptcha-container" />}
       <KeyboardAvoidingView
         style={styles.container}
         behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -92,9 +207,12 @@ export default function SignInScreen() {
             </Text>
 
             <View style={styles.inputContainer}>
-              <TouchableOpacity style={styles.countryPicker}>
+              <TouchableOpacity
+                style={styles.countryPicker}
+                onPress={() => setShowCountryPicker(true)}
+              >
                 <Image
-                  source={{ uri: "https://flagcdn.com/w40/ae.png" }}
+                  source={{ uri: selectedCountry.flag }}
                   style={{
                     width: 24,
                     height: 16,
@@ -103,7 +221,9 @@ export default function SignInScreen() {
                   }}
                   resizeMode="cover"
                 />
-                <Text style={styles.callingCode}>+971</Text>
+                <Text style={styles.callingCode}>
+                  {selectedCountry.dialCode}
+                </Text>
                 <Ionicons name="chevron-down" size={16} color="#666" />
               </TouchableOpacity>
 
@@ -128,15 +248,71 @@ export default function SignInScreen() {
 
             {phone.length > 4 && (
               <TouchableOpacity
-                style={styles.continueButton}
+                style={[
+                  styles.continueButton,
+                  (isChecking || isLoggingIn) && { opacity: 0.7 },
+                ]}
                 onPress={handleContinue}
+                disabled={isChecking || isLoggingIn}
               >
-                <Text style={styles.continueButtonText}>Continue</Text>
+                <Text style={styles.continueButtonText}>
+                  {isChecking || isLoggingIn ? "Please wait..." : "Continue"}
+                </Text>
               </TouchableOpacity>
             )}
           </Animated.View>
         </View>
       </KeyboardAvoidingView>
+
+      {/* Country Picker Modal */}
+      <Modal visible={showCountryPicker} animationType="slide" transparent>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Select Country</Text>
+              <TouchableOpacity onPress={() => setShowCountryPicker(false)}>
+                <Ionicons name="close" size={24} color="#333" />
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.searchBar}>
+              <Ionicons name="search" size={20} color="#999" />
+              <TextInput
+                style={styles.searchInput}
+                placeholder="Search country or code"
+                value={searchQuery}
+                onChangeText={setSearchQuery}
+                {...(Platform.OS === "web" ? { outlineStyle: "none" } : {})}
+              />
+            </View>
+
+            <FlatList
+              data={filteredCountries}
+              keyExtractor={(item) => item.code}
+              renderItem={({ item }) => (
+                <TouchableOpacity
+                  style={styles.countryItem}
+                  onPress={() => {
+                    setSelectedCountry(item);
+                    setShowCountryPicker(false);
+                    setSearchQuery("");
+                  }}
+                >
+                  <View style={styles.countryInfo}>
+                    <Image
+                      source={{ uri: item.flag }}
+                      style={styles.itemFlag}
+                      resizeMode="cover"
+                    />
+                    <Text style={styles.countryName}>{item.name}</Text>
+                  </View>
+                  <Text style={styles.itemDialCode}>{item.dialCode}</Text>
+                </TouchableOpacity>
+              )}
+            />
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -260,5 +436,70 @@ const styles = StyleSheet.create({
     color: "#000",
     fontSize: 16,
     fontWeight: "700",
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    justifyContent: "flex-end",
+  },
+  modalContent: {
+    backgroundColor: "#fff",
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    height: "80%",
+    padding: 20,
+  },
+  modalHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 20,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: "700",
+    color: "#333",
+  },
+  searchBar: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#F5F5F5",
+    borderRadius: 10,
+    paddingHorizontal: 15,
+    marginBottom: 20,
+    height: 50,
+  },
+  searchInput: {
+    flex: 1,
+    marginLeft: 10,
+    fontSize: 16,
+    color: "#333",
+  },
+  countryItem: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingVertical: 15,
+    borderBottomWidth: 1,
+    borderBottomColor: "#F0F0F0",
+  },
+  countryInfo: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  itemFlag: {
+    width: 30,
+    height: 20,
+    borderRadius: 2,
+    marginRight: 15,
+  },
+  countryName: {
+    fontSize: 16,
+    color: "#333",
+  },
+  itemDialCode: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#666",
   },
 });

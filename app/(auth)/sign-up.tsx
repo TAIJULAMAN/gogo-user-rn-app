@@ -16,20 +16,55 @@ import {
 } from "react-native";
 import Animated, { FadeInDown, FadeInUp } from "react-native-reanimated";
 
+import { useLocalSearchParams } from "expo-router";
+import { Alert } from "react-native";
+import { useSignUpMutation } from "../../Redux/features/auth/authApi";
+
 export default function SignUpScreen() {
   const router = useRouter();
+  const { phone } = useLocalSearchParams();
+  const [signUp, { isLoading }] = useSignUpMutation();
 
   // Registration Form State
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
+  const [companyName, setCompanyName] = useState("Demo Com");
+  const [trnVatNo, setTrnVatNo] = useState("TRN-12345");
   const [whatsappUpdate, setWhatsappUpdate] = useState(true);
-  const [requirement, setRequirement] = useState(
-    "I will be using Porter for :",
-  );
+  const [requirement, setRequirement] = useState("User");
   const [referralCode, setReferralCode] = useState("");
-  const [phoneNumber, setPhoneNumber] = useState("581315770");
+  const [phoneNumber, setPhoneNumber] = useState((phone as string) || "");
   const [newPhoneNumber, setNewPhoneNumber] = useState("");
+
+  const handleRegister = async () => {
+    if (!firstName || !lastName || !email) {
+      Alert.alert("Error", "Please fill in all required fields");
+      return;
+    }
+
+    const payload = {
+      firstName,
+      lastName,
+      phoneNumber,
+      email,
+      companyName: companyName || "Demo Co",
+      trnVatNo: trnVatNo || "TRN-12345",
+      role: requirement,
+    };
+
+    try {
+      await signUp(payload).unwrap();
+      Alert.alert("Success", "Account created successfully. Please sign in.");
+      router.replace("/(auth)/sign-in");
+    } catch (error: any) {
+      console.error("Registration error:", error);
+      Alert.alert(
+        "Error",
+        error?.data?.message || "Registration failed. Please try again.",
+      );
+    }
+  };
 
   // Modal Visibility State
   const [showChangeModal, setShowChangeModal] = useState(false);
@@ -119,6 +154,28 @@ export default function SignUpScreen() {
             />
           </View>
 
+          {/* Company Name */}
+          <View style={styles.inputWrapper}>
+            <TextInput
+              style={[styles.bottomInput, webOutline]}
+              placeholder="Company Name (Optional)"
+              placeholderTextColor="#A0A0A0"
+              value={companyName}
+              onChangeText={setCompanyName}
+            />
+          </View>
+
+          {/* TRN/VAT Number */}
+          <View style={styles.inputWrapper}>
+            <TextInput
+              style={[styles.bottomInput, webOutline]}
+              placeholder="TRN/VAT Number (Optional)"
+              placeholderTextColor="#A0A0A0"
+              value={trnVatNo}
+              onChangeText={setTrnVatNo}
+            />
+          </View>
+
           {/* Requirement Dropdown */}
           <View style={styles.requirementWrapper}>
             <Text style={styles.smallLabel}>Requirement</Text>
@@ -155,10 +212,13 @@ export default function SignUpScreen() {
 
           {/* Register Button */}
           <TouchableOpacity
-            style={styles.registerButton}
-            onPress={() => router.replace("/sign-in")}
+            style={[styles.registerButton, isLoading && { opacity: 0.7 }]}
+            onPress={handleRegister}
+            disabled={isLoading}
           >
-            <Text style={styles.registerButtonText}>REGISTER</Text>
+            <Text style={styles.registerButtonText}>
+              {isLoading ? "REGISTERING..." : "REGISTER"}
+            </Text>
           </TouchableOpacity>
         </Animated.View>
       </ScrollView>

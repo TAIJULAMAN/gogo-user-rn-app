@@ -5,10 +5,18 @@ import { KeyboardAvoidingView, Platform, StyleSheet, Text, TextInput, TouchableO
 import { Button } from '../../components/Button';
 import { Colors } from '../../constants/Colors';
 
+import { useVerifyUserPhoneMutation } from '../../Redux/features/auth/authApi';
+import { auth } from '../../config/firebaseConfig';
+import { signInWithPhoneNumber, PhoneAuthProvider, signInWithCredential } from 'firebase/auth';
+import { useLocalSearchParams } from 'expo-router';
+import { Alert } from 'react-native';
+
 export default function VerifyOTPScreen() {
     const router = useRouter();
+    const { phone } = useLocalSearchParams();
     const [otp, setOtp] = useState(['', '', '', '', '', '']);
     const [loading, setLoading] = useState(false);
+    const [verifyUserPhone] = useVerifyUserPhoneMutation();
     const inputRefs = useRef<(TextInput | null)[]>([]);
 
     const handleOtpChange = (value: string, index: number) => {
@@ -29,12 +37,45 @@ export default function VerifyOTPScreen() {
     };
 
     const handleVerify = async () => {
+        const otpCode = otp.join('');
+        if (otpCode.length < 6) {
+            Alert.alert("Error", "Please enter a 6-digit OTP");
+            return;
+        }
+
         setLoading(true);
-        // Simulate API call
-        setTimeout(() => {
+        try {
+            let idToken = "MOCK_FIREBASE_ID_TOKEN";
+
+            if (Platform.OS === 'web') {
+                if (!window.confirmationResult) {
+                    Alert.alert("Error", "No verification process found. Please go back and try again.");
+                    setLoading(false);
+                    return;
+                }
+
+                // 1. Confirm OTP with Firebase
+                const userCredential = await window.confirmationResult.confirm(otpCode);
+                // 2. Get actual ID Token
+                idToken = await userCredential.user.getIdToken();
+            }
+
+            // 3. Verify with backend
+            const response = await verifyUserPhone({
+                phoneNumber: phone,
+                idToken: idToken
+            }).unwrap();
+
+            if (response?.success) {
+                Alert.alert("Success", "Verification successful!");
+                router.replace('/(user)/user');
+            }
+        } catch (error: any) {
+            console.error("Verification error:", error);
+            Alert.alert("Error", error?.message || error?.data?.message || "Verification failed. Please try again.");
+        } finally {
             setLoading(false);
-            router.replace('/(user)/user');
-        }, 1500);
+        }
     };
 
     const handleResend = () => {
