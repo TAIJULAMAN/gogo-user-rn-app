@@ -85,7 +85,7 @@ export default function HelpCenterScreen() {
                     <View style={styles.quickActions}>
                         <TouchableOpacity
                             style={styles.actionCard}
-                            onPress={() => router.push('/(user)/user/contact-us')}
+                            onPress={() => router.push('/(tab)/account/contact-us')}
                         >
                             <View style={styles.actionIcon}>
                                 <Ionicons name="chatbubble-ellipses" size={24} color={Colors.primaryDark} />

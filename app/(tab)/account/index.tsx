@@ -1,8 +1,10 @@
 import { Ionicons } from "@expo/vector-icons";
+import * as ImagePicker from "expo-image-picker";
 import { useRouter } from "expo-router";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Alert,
+  Image,
   Modal,
   Platform,
   ScrollView,
@@ -13,12 +15,17 @@ import {
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useUpdateMyProfileMutation } from "../../../Redux/api/userApi";
+import { useAppDispatch, useAppSelector } from "../../../Redux/hooks";
+import { logout, updateUser } from "../../../Redux/Slice/authSlice";
 
 export default function AccountScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const dispatch = useAppDispatch();
+  const user = useAppSelector((state) => state.auth.user);
+  const [updateMyProfile, { isLoading: isUpdatingProfile }] = useUpdateMyProfileMutation();
 
-  const [hasTaxDetails, setHasTaxDetails] = useState(false);
   const [isTaxModalVisible, setIsTaxModalVisible] = useState(false);
   const [isVerifying, setIsVerifying] = useState(false);
 
@@ -26,14 +33,75 @@ export default function AccountScreen() {
   const [trnNo, setTrnNo] = useState("");
   const [trnAddress, setTrnAddress] = useState("");
   const [companyName, setCompanyName] = useState("");
+  const userName = [user?.firstName, user?.lastName].filter(Boolean).join(" ") || user?.name || "User";
+  const userEmail = user?.email || "No email added";
+  const avatarInitials = [user?.firstName, user?.lastName]
+    .filter(Boolean)
+    .map((name: string) => name.charAt(0))
+    .join("")
+    .slice(0, 2)
+    .toUpperCase() || "U";
+  const hasTaxDetails = Boolean(user?.trnVatNo || trnNo);
 
-  const handleConfirmTax = () => {
+  useEffect(() => {
+    setTrnNo(user?.trnVatNo || "");
+    setCompanyName(user?.companyName || "");
+  }, [user?.companyName, user?.trnVatNo]);
+
+  const handleConfirmTax = async () => {
     if (!trnNo || !trnAddress || !companyName) {
       Alert.alert("Error", "Please fill in all tax details.");
       return;
     }
-    setHasTaxDetails(true);
-    setIsTaxModalVisible(false);
+
+    try {
+      const response = await updateMyProfile({
+        trnVatNo: trnNo,
+        companyName,
+      }).unwrap();
+
+      dispatch(updateUser(response.data));
+      setIsTaxModalVisible(false);
+      Alert.alert("Success", "Tax details saved successfully.");
+    } catch (error: any) {
+      Alert.alert("Error", error?.data?.message || "Could not save tax details.");
+    }
+  };
+
+  const handlePickImage = async () => {
+    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+
+    if (!permission.granted) {
+      Alert.alert("Permission needed", "Please allow photo access to upload a profile image.");
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.8,
+    });
+
+    if (result.canceled) {
+      return;
+    }
+
+    const asset = result.assets[0];
+    const formData = new FormData();
+    formData.append("profileImage", {
+      uri: asset.uri,
+      name: asset.fileName || "profile-image.jpg",
+      type: asset.mimeType || "image/jpeg",
+    } as any);
+
+    try {
+      const response = await updateMyProfile(formData).unwrap();
+      dispatch(updateUser(response.data));
+      Alert.alert("Success", "Profile image updated.");
+    } catch (error: any) {
+      Alert.alert("Error", error?.data?.message || "Could not upload image.");
+    }
   };
 
   const handleLogout = () => {
@@ -42,7 +110,10 @@ export default function AccountScreen() {
       {
         text: "Logout",
         style: "destructive",
-        onPress: () => router.replace("/(auth)/sign-in"),
+        onPress: () => {
+          dispatch(logout());
+          router.replace("/(auth)/sign-in");
+        },
       },
     ]);
   };
@@ -81,18 +152,22 @@ export default function AccountScreen() {
           <View style={styles.avatarContainer}>
             <TouchableOpacity
               style={styles.avatarCircle}
-              onPress={() => router.push("/(user)/user/edit-profile")}
+              onPress={handlePickImage}
             >
-              <Text style={styles.avatarInitials}>RH</Text>
+              {user?.profileImage ? (
+                <Image source={{ uri: user.profileImage }} style={styles.avatarImage} />
+              ) : (
+                <Text style={styles.avatarInitials}>{avatarInitials}</Text>
+              )}
             </TouchableOpacity>
-            <View style={styles.avatarBadge}>
-              <Ionicons name="star" size={12} color="#000" />
-            </View>
+            <TouchableOpacity style={styles.editIconOverlay} onPress={handlePickImage}>
+              <Ionicons name="camera" size={14} color="#000" />
+            </TouchableOpacity>
           </View>
 
-          <Text style={styles.userName}>Roshan Hegde</Text>
+          <Text style={styles.userName}>{userName}</Text>
           <View style={styles.emailRow}>
-            <Text style={styles.emailText}>hshaaj@gmail.com</Text>
+            <Text style={styles.emailText}>{userEmail}</Text>
             {hasTaxDetails ? (
               <View style={styles.verifiedBadge}>
                 <Ionicons name="checkmark-circle" size={14} color="#10B981" />
@@ -138,7 +213,7 @@ export default function AccountScreen() {
         <View style={styles.twoCardRow}>
           <TouchableOpacity
             style={styles.gridCard}
-            onPress={() => router.push("/(user)/user/address-book")}
+            onPress={() => router.push("/(tab)/account/address-book")}
           >
             <View style={[styles.iconCircle, { backgroundColor: "#F0FDF4" }]}>
               <Ionicons name="location" size={22} color="#16A34A" />
@@ -148,7 +223,7 @@ export default function AccountScreen() {
 
           <TouchableOpacity
             style={styles.gridCard}
-            onPress={() => router.push("/(user)/user/help-center")}
+            onPress={() => router.push("/(tab)/account/help-center")}
           >
             <View style={[styles.iconCircle, { backgroundColor: "#FFF7ED" }]}>
               <Ionicons name="help-buoy" size={22} color="#EA580C" />
@@ -178,7 +253,7 @@ export default function AccountScreen() {
           <View style={styles.referCardRight}>
             <TouchableOpacity
               style={styles.inviteBtn}
-              onPress={() => router.push("/(user)/user/referral")}
+              onPress={() => router.push("/(tab)/account/referral")}
             >
               <Text style={styles.inviteBtnText}>Invite</Text>
             </TouchableOpacity>
@@ -189,7 +264,7 @@ export default function AccountScreen() {
         <View style={styles.menuList}>
           <TouchableOpacity
             style={styles.menuItem}
-            onPress={() => router.push("/(user)/user/edit-profile")}
+            onPress={() => router.push("/(tab)/account/edit-profile")}
           >
             <View
               style={[styles.menuIconCircle, { backgroundColor: "#F8FAFC" }]}
@@ -204,7 +279,7 @@ export default function AccountScreen() {
 
           <TouchableOpacity
             style={styles.menuItem}
-            onPress={() => router.push("/(user)/user/terms-of-service")}
+            onPress={() => router.push("/(tab)/account/terms-of-service")}
           >
             <View
               style={[styles.menuIconCircle, { backgroundColor: "#F8FAFC" }]}
@@ -216,6 +291,25 @@ export default function AccountScreen() {
               />
             </View>
             <Text style={styles.menuItemText}>Terms & Conditions</Text>
+            <Ionicons name="chevron-forward" size={18} color="#CBD5E1" />
+          </TouchableOpacity>
+
+          <View style={styles.menuDivider} />
+
+          <TouchableOpacity
+            style={styles.menuItem}
+            onPress={() => router.push("/(tab)/account/privacy-policy")}
+          >
+            <View
+              style={[styles.menuIconCircle, { backgroundColor: "#F8FAFC" }]}
+            >
+              <Ionicons
+                name="shield-checkmark-outline"
+                size={20}
+                color="#64748B"
+              />
+            </View>
+            <Text style={styles.menuItemText}>Privacy Policy</Text>
             <Ionicons name="chevron-forward" size={18} color="#CBD5E1" />
           </TouchableOpacity>
 
@@ -306,8 +400,11 @@ export default function AccountScreen() {
             <TouchableOpacity
               style={styles.confirmBtn}
               onPress={handleConfirmTax}
+              disabled={isUpdatingProfile}
             >
-              <Text style={styles.confirmBtnText}>Save Tax Details</Text>
+              <Text style={styles.confirmBtnText}>
+                {isUpdatingProfile ? "Saving..." : "Save Tax Details"}
+              </Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -354,6 +451,11 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     borderWidth: 3,
     borderColor: "#9ef586",
+    overflow: "hidden",
+  },
+  avatarImage: {
+    width: "100%",
+    height: "100%",
   },
   avatarInitials: {
     fontSize: 32,

@@ -118,12 +118,12 @@ export default function VehicleSelectionScreen() {
 
 
                         <View style={styles.journeyActions}>
-                            <TouchableOpacity style={styles.actionButton} onPress={() => router.push('/(user)/user/add-stops')}>
+                            <TouchableOpacity style={styles.actionButton} onPress={() => router.push('/(tab)/user/add-stops')}>
                                 <Ionicons name="add-circle-outline" size={18} color="#333" />
                                 <Text style={styles.actionButtonText}>Add Stop</Text>
                             </TouchableOpacity>
                             <View style={styles.actionDivider} />
-                            <TouchableOpacity style={styles.actionButton} onPress={() => router.push('/(user)/user/add-stops')}>
+                            <TouchableOpacity style={styles.actionButton} onPress={() => router.push('/(tab)/user/add-stops')}>
                                 <MaterialIcons name="edit" size={18} color="#333" />
                                 <Text style={styles.actionButtonText}>Edit Location</Text>
                             </TouchableOpacity>
@@ -165,7 +165,7 @@ export default function VehicleSelectionScreen() {
                         ))}
                     </View>
 
-                    <TouchableOpacity style={[styles.continueButton, { backgroundColor: '#BEFFB6' }]} onPress={() => router.push('/(user)/user/checkout')}>
+                    <TouchableOpacity style={[styles.continueButton, { backgroundColor: '#BEFFB6' }]} onPress={() => router.push('/(tab)/user/checkout')}>
                         <Text style={styles.continueButtonText}>Proceed to Checkout</Text>
                     </TouchableOpacity>
 

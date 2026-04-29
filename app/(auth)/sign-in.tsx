@@ -22,7 +22,7 @@ import { OnboardingSlider } from "../../components/OnboardingSlider";
 import {
   useCheckUserByPhoneMutation,
   useLogInMutation,
-} from "../../Redux/features/auth/authApi";
+} from "../../Redux/api/authApi";
 
 import { getAuth, signInWithPhoneNumber } from "@react-native-firebase/auth";
 import { COUNTRIES, Country } from "../../constants/countries";

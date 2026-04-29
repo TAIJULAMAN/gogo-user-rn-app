@@ -144,7 +144,7 @@ export default function AddStopsScreen() {
                         />
                     </View>
 
-                    <TouchableOpacity style={[styles.continueButton, { backgroundColor: '#BEFFB6' }]} onPress={() => router.push('/(user)/user/vehicle-selection')}>
+                    <TouchableOpacity style={[styles.continueButton, { backgroundColor: '#BEFFB6' }]} onPress={() => router.push('/(tab)/user/vehicle-selection')}>
                         <Text style={styles.continueButtonText}>Continue to Vehicle</Text>
                     </TouchableOpacity>
 

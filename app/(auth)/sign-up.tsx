@@ -18,7 +18,7 @@ import Animated, { FadeInDown, FadeInUp } from "react-native-reanimated";
 
 import { useLocalSearchParams } from "expo-router";
 import { Alert } from "react-native";
-import { useSignUpMutation } from "../../Redux/features/auth/authApi";
+import { useSignUpMutation } from "../../Redux/api/authApi";
 
 export default function SignUpScreen() {
   const router = useRouter();

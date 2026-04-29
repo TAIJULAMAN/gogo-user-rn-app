@@ -78,7 +78,7 @@ export default function TransactionScreen() {
           >
             <TouchableOpacity
               style={styles.actionButton}
-              onPress={() => router.push("/(user)/user/cards")}
+              onPress={() => router.push("/(tab)/user/cards")}
               activeOpacity={0.7}
             >
               <View style={styles.actionIcon}>
@@ -89,7 +89,7 @@ export default function TransactionScreen() {
 
             <TouchableOpacity
               style={styles.actionButton}
-              onPress={() => router.push("/(user)/user/transaction-history")}
+              onPress={() => router.push("/(tab)/user/transaction-history")}
               activeOpacity={0.7}
             >
               <View style={styles.actionIcon}>
@@ -112,7 +112,7 @@ export default function TransactionScreen() {
           >
             <Text style={styles.sectionTitle}>Recent Transactions</Text>
             <TouchableOpacity
-              onPress={() => router.push("/(user)/user/transaction-history")}
+              onPress={() => router.push("/(tab)/user/transaction-history")}
             >
               <Text style={styles.seeAllText}>See All</Text>
             </TouchableOpacity>

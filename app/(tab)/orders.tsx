@@ -83,7 +83,7 @@ export default function OrdersScreen() {
             >
                 <TouchableOpacity
                     style={styles.orderCard}
-                    onPress={() => router.push(`/(user)/user/order-details?id=${item.id}`)}
+                    onPress={() => router.push(`/(tab)/user/order-details?id=${item.id}`)}
                     activeOpacity={0.7}
                 >
                     {/* Header */}

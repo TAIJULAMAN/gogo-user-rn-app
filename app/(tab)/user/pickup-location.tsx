@@ -15,7 +15,7 @@ const RECENT_LOCATIONS = [
     { name: 'Wisam Sign', address: 'Industrial Area 2, Sharjah' },
 ];
 
-export default function DropoffLocationScreen() {
+export default function PickupLocationScreen() {
     const router = useRouter();
     const [currentStep, setCurrentStep] = useState(0);
     const [searchQuery, setSearchQuery] = useState('');
@@ -78,7 +78,7 @@ export default function DropoffLocationScreen() {
                 <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
                     <Ionicons name="arrow-back" size={24} color="#000" />
                 </TouchableOpacity>
-                <Text style={styles.headerTitle}>Dropoff Location</Text>
+                <Text style={styles.headerTitle}>Pickup Location</Text>
                 <View style={{ width: 24 }} />
             </Animated.View>
 
@@ -92,14 +92,14 @@ export default function DropoffLocationScreen() {
                 >
                     <View style={styles.locationIconContainer}>
                         <Image
-                            source={require('../../../assets/drop.png')}
+                            source={require('../../../assets/pick.png')}
                             style={{ width: 40, height: 40 }}
                             resizeMode="contain"
                         />
                     </View>
                     <View>
-                        <Text style={styles.pageTitle}>Dropoff Location</Text>
-                        <Text style={styles.pageSubtitle}>Choose where to drop</Text>
+                        <Text style={styles.pageTitle}>Pickup Location</Text>
+                        <Text style={styles.pageSubtitle}>Choose where to pickup</Text>
                     </View>
                 </Animated.View>
 
@@ -171,7 +171,7 @@ export default function DropoffLocationScreen() {
                         />
                         <View style={styles.mapOverlay}>
                             <Image
-                                source={require('../../../assets/drop.png')}
+                                source={require('../../../assets/pick.png')}
                                 style={{ width: 40, height: 40 }}
                                 resizeMode="contain"
                             />
@@ -210,10 +210,10 @@ export default function DropoffLocationScreen() {
 
                         <TouchableOpacity
                             style={styles.continueButton}
-                            onPress={() => router.push('/(user)/user/add-stops')}
+                            onPress={() => router.push('/(tab)/user/drop-location')}
                             activeOpacity={0.8}
                         >
-                            <Text style={styles.continueButtonText}>Continue to Add Stops</Text>
+                            <Text style={styles.continueButtonText}>Continue to Drop Location</Text>
                             <Ionicons name="arrow-forward" size={24} color="#000" />
                         </TouchableOpacity>
                     </Animated.View>
@@ -344,7 +344,7 @@ const styles = StyleSheet.create({
         position: 'absolute',
         top: '50%',
         left: '50%',
-        transform: [{ translateX: -20 }, { translateY: -24 }],
+        transform: [{ translateX: -20 }, { translateY: -20 }],
     },
     formContainer: {
         gap: 4,
@@ -414,7 +414,7 @@ const styles = StyleSheet.create({
         width: 36,
         height: 36,
         borderRadius: 18,
-        backgroundColor: '#FFF0F0',
+        backgroundColor: '#F0FFF0',
         alignItems: 'center',
         justifyContent: 'center',
         marginRight: 12,

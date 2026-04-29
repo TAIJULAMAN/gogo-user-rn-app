@@ -13,19 +13,16 @@ import {
 import { Button } from "../../components/Button";
 import { Colors } from "../../constants/Colors";
 
-import { useVerifyUserPhoneMutation } from "../../Redux/features/auth/authApi";
-import { auth } from "../../config/firebaseConfig";
-import {
-  signInWithPhoneNumber,
-  PhoneAuthProvider,
-  signInWithCredential,
-} from "firebase/auth";
-import { useLocalSearchParams } from "expo-router";
-import { Alert } from "react-native";
+import { useVerifyUserPhoneMutation } from "../../Redux/api/authApi";
+import { useAppDispatch } from "../../Redux/hooks";
+import { setUser } from "../../Redux/Slice/authSlice";
+
 
 export default function VerifyOTPScreen() {
   const router = useRouter();
   const { phone } = useLocalSearchParams();
+  const phoneNumber = Array.isArray(phone) ? phone[0] : phone;
+  const dispatch = useAppDispatch();
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
   const [loading, setLoading] = useState(false);
   const [verifyUserPhone] = useVerifyUserPhoneMutation();
@@ -73,13 +70,27 @@ export default function VerifyOTPScreen() {
 
       // 3. Verify with backend
       const response = await verifyUserPhone({
-        phoneNumber: phone,
+        phoneNumber,
         idToken: idToken,
       }).unwrap();
 
       if (response?.success) {
+        const { user, accessToken, refreshToken } = response.data ?? {};
+
+        if (!user || !accessToken || !refreshToken) {
+          throw new Error("Verification response is missing auth data.");
+        }
+
+        dispatch(
+          setUser({
+            user,
+            token: accessToken,
+            refreshToken,
+          }),
+        );
+
         Alert.alert("Success", "Verification successful!");
-        router.replace("/(user)/user");
+        router.replace("/user");
       }
     } catch (error: any) {
       console.error("Verification error:", error);

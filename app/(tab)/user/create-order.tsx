@@ -94,7 +94,7 @@ export default function CreateOrderScreen() {
                                         <Text style={styles.inputLabel}>Pickup Location</Text>
                                         <TouchableOpacity
                                             style={styles.inputTouchable}
-                                            onPress={() => router.push('/(user)/user/pickup-location')}
+                                            onPress={() => router.push('/(tab)/user/pickup-location')}
                                         >
                                             <Text style={[
                                                 styles.inputText,
@@ -106,7 +106,7 @@ export default function CreateOrderScreen() {
                                     </View>
                                     <TouchableOpacity
                                         style={styles.locationButton}
-                                        onPress={() => router.push('/(user)/user/pickup-location')}
+                                        onPress={() => router.push('/(tab)/user/pickup-location')}
                                     >
                                         <Ionicons name="chevron-forward" size={20} color="#999" />
                                     </TouchableOpacity>
@@ -132,7 +132,7 @@ export default function CreateOrderScreen() {
                                         <Text style={styles.inputLabel}>Dropoff Location</Text>
                                         <TouchableOpacity
                                             style={styles.inputTouchable}
-                                            onPress={() => router.push('/(user)/user/drop-location')}
+                                            onPress={() => router.push('/(tab)/user/drop-location')}
                                         >
                                             <Text style={[
                                                 styles.inputText,
@@ -144,7 +144,7 @@ export default function CreateOrderScreen() {
                                     </View>
                                     <TouchableOpacity
                                         style={styles.locationButton}
-                                        onPress={() => router.push('/(user)/user/drop-location')}
+                                        onPress={() => router.push('/(tab)/user/drop-location')}
                                     >
                                         <Ionicons name="chevron-forward" size={20} color="#999" />
                                     </TouchableOpacity>
@@ -214,7 +214,7 @@ export default function CreateOrderScreen() {
                     <TouchableOpacity
                         style={styles.continueButton}
                         activeOpacity={0.8}
-                        onPress={() => router.push('/(user)/user/vehicle-selection')}
+                        onPress={() => router.push('/(tab)/user/vehicle-selection')}
                     >
                         <Text style={styles.continueButtonText}>Continue to Vehicle</Text>
                         <Ionicons name="arrow-forward" size={24} color="#000" />

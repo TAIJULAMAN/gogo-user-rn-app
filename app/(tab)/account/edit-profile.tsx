@@ -1,33 +1,102 @@
 import { Ionicons } from '@expo/vector-icons';
+import * as ImagePicker from 'expo-image-picker';
 import { Stack, useRouter } from 'expo-router';
-import React, { useState } from 'react';
-import { Alert, ScrollView, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { Alert, Image, ScrollView, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
+import { useUpdateMyProfileMutation } from '../../../Redux/api/userApi';
+import { useAppDispatch, useAppSelector } from '../../../Redux/hooks';
+import { updateUser } from '../../../Redux/Slice/authSlice';
 import { Colors } from '../../../constants/Colors';
 
 export default function EditProfileScreen() {
     const router = useRouter();
-    const [name, setName] = useState('John Doe');
-    const [email, setEmail] = useState('john.doe@example.com');
-    const [phone, setPhone] = useState('+971 50 123 4567');
-    const [address, setAddress] = useState('Dubai Marina, Dubai');
+    const dispatch = useAppDispatch();
+    const user = useAppSelector((state) => state.auth.user);
+    const [updateMyProfile, { isLoading }] = useUpdateMyProfileMutation();
+    const [firstName, setFirstName] = useState('');
+    const [lastName, setLastName] = useState('');
+    const [email, setEmail] = useState('');
+    const [phone, setPhone] = useState('');
+    const [companyName, setCompanyName] = useState('');
+    const [profileImage, setProfileImage] = useState<string | undefined>();
+    const avatarInitials = [firstName, lastName]
+        .filter(Boolean)
+        .map((name) => name.charAt(0))
+        .join('')
+        .slice(0, 2)
+        .toUpperCase() || 'U';
 
-    const handleSave = () => {
-        if (!name || !email || !phone) {
+    useEffect(() => {
+        if (!user) {
+            return;
+        }
+
+        setFirstName(user.firstName || '');
+        setLastName(user.lastName || '');
+        setEmail(user.email || '');
+        setPhone(user.phoneNumber || '');
+        setCompanyName(user.companyName || '');
+        setProfileImage(user.profileImage);
+    }, [user]);
+
+    const handlePickImage = async () => {
+        const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+
+        if (!permission.granted) {
+            Alert.alert('Permission needed', 'Please allow photo access to upload a profile image.');
+            return;
+        }
+
+        const result = await ImagePicker.launchImageLibraryAsync({
+            mediaTypes: ImagePicker.MediaTypeOptions.Images,
+            allowsEditing: true,
+            aspect: [1, 1],
+            quality: 0.8,
+        });
+
+        if (!result.canceled) {
+            setProfileImage(result.assets[0].uri);
+        }
+    };
+
+    const handleSave = async () => {
+        if (!firstName || !lastName || !email || !phone) {
             Alert.alert('Error', 'Please fill in all required fields');
             return;
         }
 
-        Alert.alert(
-            'Success',
-            'Your profile has been updated successfully',
-            [
+        const formData = new FormData();
+        formData.append('firstName', firstName);
+        formData.append('lastName', lastName);
+        formData.append('email', email);
+        formData.append('phoneNumber', phone);
+        if (companyName) {
+            formData.append('companyName', companyName);
+        }
+
+        if (profileImage && profileImage !== user?.profileImage) {
+            const fileName = profileImage.split('/').pop() || 'profile-image.jpg';
+            const extension = fileName.split('.').pop() || 'jpg';
+            formData.append('profileImage', {
+                uri: profileImage,
+                name: fileName,
+                type: `image/${extension === 'jpg' ? 'jpeg' : extension}`,
+            } as any);
+        }
+
+        try {
+            const response = await updateMyProfile(formData).unwrap();
+            dispatch(updateUser(response.data));
+            Alert.alert('Success', 'Your profile has been updated successfully', [
                 {
                     text: 'OK',
-                    onPress: () => router.back()
-                }
-            ]
-        );
+                    onPress: () => router.back(),
+                },
+            ]);
+        } catch (error: any) {
+            Alert.alert('Error', error?.data?.message || 'Could not update profile');
+        }
     };
 
     return (
@@ -52,9 +121,13 @@ export default function EditProfileScreen() {
                     {/* Avatar Section */}
                     <View style={styles.avatarSection}>
                         <View style={styles.avatarContainer}>
-                            <Text style={styles.avatarText}>JD</Text>
+                            {profileImage ? (
+                                <Image source={{ uri: profileImage }} style={styles.avatarImage} />
+                            ) : (
+                                <Text style={styles.avatarText}>{avatarInitials}</Text>
+                            )}
                         </View>
-                        <TouchableOpacity style={styles.changePhotoButton}>
+                        <TouchableOpacity style={styles.changePhotoButton} onPress={handlePickImage}>
                             <Ionicons name="camera" size={16} color={Colors.primaryDark} />
                             <Text style={styles.changePhotoText}>Change Photo</Text>
                         </TouchableOpacity>
@@ -62,15 +135,29 @@ export default function EditProfileScreen() {
 
                     {/* Form Fields */}
                     <View style={styles.inputGroup}>
-                        <Text style={styles.label}>Full Name *</Text>
+                        <Text style={styles.label}>First Name *</Text>
                         <View style={styles.inputContainer}>
                             <Ionicons name="person-outline" size={20} color="#999" />
                             <TextInput
                                 style={styles.input}
-                                placeholder="Enter your name"
+                                placeholder="Enter your first name"
                                 placeholderTextColor="#999"
-                                value={name}
-                                onChangeText={setName}
+                                value={firstName}
+                                onChangeText={setFirstName}
+                            />
+                        </View>
+                    </View>
+
+                    <View style={styles.inputGroup}>
+                        <Text style={styles.label}>Last Name *</Text>
+                        <View style={styles.inputContainer}>
+                            <Ionicons name="person-outline" size={20} color="#999" />
+                            <TextInput
+                                style={styles.input}
+                                placeholder="Enter your last name"
+                                placeholderTextColor="#999"
+                                value={lastName}
+                                onChangeText={setLastName}
                             />
                         </View>
                     </View>
@@ -107,15 +194,15 @@ export default function EditProfileScreen() {
                     </View>
 
                     <View style={styles.inputGroup}>
-                        <Text style={styles.label}>Address</Text>
+                        <Text style={styles.label}>Company Name</Text>
                         <View style={styles.inputContainer}>
-                            <Ionicons name="location-outline" size={20} color="#999" />
+                            <Ionicons name="business-outline" size={20} color="#999" />
                             <TextInput
                                 style={styles.input}
-                                placeholder="Enter your address"
+                                placeholder="Enter your company name"
                                 placeholderTextColor="#999"
-                                value={address}
-                                onChangeText={setAddress}
+                                value={companyName}
+                                onChangeText={setCompanyName}
                             />
                         </View>
                     </View>
@@ -131,9 +218,10 @@ export default function EditProfileScreen() {
                 <TouchableOpacity
                     style={styles.saveButton}
                     onPress={handleSave}
+                    disabled={isLoading}
                     activeOpacity={0.8}
                 >
-                    <Text style={styles.saveButtonText}>Save Changes</Text>
+                    <Text style={styles.saveButtonText}>{isLoading ? 'Saving...' : 'Save Changes'}</Text>
                 </TouchableOpacity>
             </Animated.View>
         </View>
@@ -180,6 +268,11 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
         marginBottom: 16,
+        overflow: 'hidden',
+    },
+    avatarImage: {
+        width: '100%',
+        height: '100%',
     },
     avatarText: {
         fontSize: 36,

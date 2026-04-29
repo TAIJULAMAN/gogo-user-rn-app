@@ -11,7 +11,7 @@ export default function RunningOrderScreen() {
 
     const handleCancelOrder = () => {
         // In a real app, this would trigger a cancellation flow
-        router.replace('/(user)/user');
+        router.replace('/user');
     };
 
     return (
@@ -27,7 +27,7 @@ export default function RunningOrderScreen() {
 
             {/* Header - Close Button */}
             <Animated.View entering={FadeInUp.delay(200)} style={styles.header}>
-                <TouchableOpacity onPress={() => router.replace('/(user)/user')} style={styles.closeButton}>
+                <TouchableOpacity onPress={() => router.replace('/user')} style={styles.closeButton}>
                     <Ionicons name="close" size={24} color="#000" />
                 </TouchableOpacity>
             </Animated.View>

@@ -32,7 +32,7 @@ export default function PaymentSuccessScreen() {
             <View style={styles.footer}>
                 <TouchableOpacity
                     style={[styles.button, styles.secondaryButton]}
-                    onPress={() => router.push('/(user)/user')}
+                    onPress={() => router.push('/user')}
                 >
                     <Text style={styles.secondaryButtonText}>Back to Home</Text>
                 </TouchableOpacity>

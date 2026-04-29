@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { Image, ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
 import { Colors } from '../../../constants/Colors';
+import { useAppSelector } from '../../../Redux/hooks';
 
 const VEHICLES = [
     { id: 'bike', name: 'Bike Delivery', image: require('../../../assets/vehicles/moto.png') },
@@ -29,7 +30,9 @@ const FeatureItem = ({ text, index }: { text: string, index: number }) => (
 
 export default function HomeScreen() {
     const router = useRouter();
+    const user = useAppSelector((state) => state.auth.user);
     const [selectedVehicle, setSelectedVehicle] = useState('car');
+    const userName = [user?.firstName, user?.lastName].filter(Boolean).join(' ') || user?.name || user?.email || 'User';
 
     return (
         <View style={styles.container}>
@@ -52,12 +55,12 @@ export default function HomeScreen() {
                             </View>
                             <View>
                                 <Text style={styles.welcomeText}>Welcome back,</Text>
-                                <Text style={styles.userName}>Md Shah Aman</Text>
+                                <Text style={styles.userName}>{userName}</Text>
                             </View>
                         </View>
                         <TouchableOpacity
                             style={styles.notificationButton}
-                            onPress={() => router.push('/(user)/user/notifications')}
+                            onPress={() => router.push('/(tab)/user/notifications')}
                         >
                             <Ionicons name="notifications-outline" size={24} color="#000" />
                             <View style={styles.notificationBadge} />
@@ -80,7 +83,7 @@ export default function HomeScreen() {
                                     ]}
                                     onPress={() => {
                                         setSelectedVehicle(vehicle.id);
-                                        // router.push('/(user)/user/create-order');
+                                        // router.push('/(tab)/user/create-order');
                                     }}
                                     activeOpacity={0.7}
                                 >
@@ -106,7 +109,7 @@ export default function HomeScreen() {
 
                         <TouchableOpacity
                             style={styles.ctaButton}
-                            onPress={() => router.push('/(user)/user/create-order')}
+                            onPress={() => router.push('/(tab)/user/create-order')}
                             activeOpacity={0.8}
                         >
                             <Text style={styles.ctaButtonText}>Book Now</Text>

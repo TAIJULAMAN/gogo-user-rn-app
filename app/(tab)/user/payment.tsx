@@ -25,7 +25,7 @@ export default function PaymentScreen() {
 
     const handleCloseModal = () => {
         setShowSuccessModal(false);
-        router.replace('/(user)/user/running-order');
+        router.replace('/(tab)/user/running-order');
     };
 
     const renderStepper = () => (

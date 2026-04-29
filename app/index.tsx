@@ -1,10 +1,13 @@
 
 import { Redirect } from 'expo-router';
+import { useAppSelector } from '../Redux/hooks';
 
 export default function Index() {
-    // If first time -> /splash -> /onboarding
-    // If signed in -> /(tabs)
-    // Else -> /sign-in
+    const token = useAppSelector((state) => state.auth.token);
+
+    if (token) {
+        return <Redirect href="/user" />;
+    }
 
     return <Redirect href="/splash" />;
 }

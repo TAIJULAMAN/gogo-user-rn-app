@@ -16,11 +16,11 @@ export const baseApi = createApi({
       const token = state?.auth?.token;
 
       if (token) {
-        headers.set("Authorization", `${token}`);
+        headers.set("Authorization", `Bearer ${token}`);
       }
       return headers;
     },
   }),
   endpoints: () => ({}),
-  tagTypes: ["auth"],
+  tagTypes: ["auth", "user", "addresses", "common"],
 });

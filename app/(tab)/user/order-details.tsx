@@ -204,7 +204,7 @@ export default function OrderDetailsScreen() {
                     {order.status === 'Delivered' && (
                         <TouchableOpacity
                             style={[styles.actionButton, styles.actionButtonPrimary]}
-                            onPress={() => router.push('/(user)/user/rate-driver')}
+                            onPress={() => router.push('/(tab)/user/rate-driver')}
                         >
                             <Ionicons name="star-outline" size={20} color={Colors.text} />
                             <Text style={styles.actionButtonText}>Rate Driver</Text>

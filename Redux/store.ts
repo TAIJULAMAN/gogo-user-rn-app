@@ -1,15 +1,13 @@
 import { combineReducers, configureStore } from "@reduxjs/toolkit";
 import { persistReducer, persistStore } from "redux-persist";
-import { Platform } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import storage from "redux-persist/lib/storage"; // Defaults to localStorage for web
 
 import { authSlice } from "./Slice/authSlice";
-import { baseApi } from "./features/baseApi";
+import { baseApi } from "./api/baseApi";
 
 const persistConfig = {
   key: "gogo-user-app",
-  storage: Platform.OS === "web" ? storage : AsyncStorage,
+  storage: AsyncStorage,
   whitelist: ["auth"], // Persist auth slice
   blacklist: ["baseApi"], // Don't persist API cache
 };
