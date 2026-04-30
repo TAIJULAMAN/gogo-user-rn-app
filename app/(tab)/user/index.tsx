@@ -1,10 +1,11 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import React, { useState } from 'react';
+import React from 'react';
 import { Image, ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
+import { useAppDispatch, useAppSelector } from '../../../Redux/hooks';
+import { setSelectedVehicle } from '../../../Redux/Slice/orderDraftSlice';
 import { Colors } from '../../../constants/Colors';
-import { useAppSelector } from '../../../Redux/hooks';
 
 const VEHICLES = [
     { id: 'bike', name: 'Bike Delivery', image: require('../../../assets/vehicles/moto.png') },
@@ -30,9 +31,16 @@ const FeatureItem = ({ text, index }: { text: string, index: number }) => (
 
 export default function HomeScreen() {
     const router = useRouter();
+    const dispatch = useAppDispatch();
     const user = useAppSelector((state) => state.auth.user);
-    const [selectedVehicle, setSelectedVehicle] = useState('car');
+    const selectedVehicleId = useAppSelector((state) => state.orderDraft.selectedVehicleId);
+    const activeVehicleId = selectedVehicleId || 'car';
     const userName = [user?.firstName, user?.lastName].filter(Boolean).join(' ') || user?.name || user?.email || 'User';
+
+    const handleBookNow = () => {
+        dispatch(setSelectedVehicle(activeVehicleId));
+        router.push('/(tab)/orders/create-order');
+    };
 
     return (
         <View style={styles.container}>
@@ -79,17 +87,14 @@ export default function HomeScreen() {
                                     key={vehicle.id}
                                     style={[
                                         styles.vehicleButton,
-                                        selectedVehicle === vehicle.id && styles.vehicleButtonActive
+                                        activeVehicleId === vehicle.id && styles.vehicleButtonActive
                                     ]}
-                                    onPress={() => {
-                                        setSelectedVehicle(vehicle.id);
-                                        // router.push('/(tab)/user/create-order');
-                                    }}
+                                    onPress={() => dispatch(setSelectedVehicle(vehicle.id))}
                                     activeOpacity={0.7}
                                 >
                                     <View style={[
                                         styles.vehicleIconContainer,
-                                        selectedVehicle === vehicle.id && styles.vehicleIconContainerActive
+                                        activeVehicleId === vehicle.id && styles.vehicleIconContainerActive
                                     ]}>
                                         <Image
                                             source={vehicle.image}
@@ -99,7 +104,7 @@ export default function HomeScreen() {
                                     </View>
                                     <Text style={[
                                         styles.vehicleName,
-                                        selectedVehicle === vehicle.id && styles.vehicleNameActive
+                                        activeVehicleId === vehicle.id && styles.vehicleNameActive
                                     ]}>
                                         {vehicle.name}
                                     </Text>
@@ -109,7 +114,7 @@ export default function HomeScreen() {
 
                         <TouchableOpacity
                             style={styles.ctaButton}
-                            onPress={() => router.push('/(tab)/user/create-order')}
+                            onPress={handleBookNow}
                             activeOpacity={0.8}
                         >
                             <Text style={styles.ctaButtonText}>Book Now</Text>

@@ -3,6 +3,7 @@ import { persistReducer, persistStore } from "redux-persist";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 import { authSlice } from "./Slice/authSlice";
+import { orderDraftSlice } from "./Slice/orderDraftSlice";
 import { baseApi } from "./api/baseApi";
 
 const persistConfig = {
@@ -15,6 +16,7 @@ const persistConfig = {
 const rootReducer = combineReducers({
   [baseApi.reducerPath]: baseApi.reducer,
   auth: authSlice.reducer,
+  orderDraft: orderDraftSlice.reducer,
 });
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);

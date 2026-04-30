@@ -1,12 +1,13 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useState } from 'react';
-import { Alert, ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Alert, ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View, ActivityIndicator } from 'react-native';
 import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
 import CancelOrderModal from '../../../components/CancelOrderModal';
 import InvoiceModal from '../../../components/InvoiceModal';
 import { DropoffIcon, PickupIcon } from '../../../components/LocationIcons';
 import { Colors } from '../../../constants/Colors';
+import { useCancelOrderMutation, useGetOrderByIdQuery } from '../../../Redux/api/orderApi';
 
 export default function OrderDetailsScreen() {
     const router = useRouter();
@@ -14,68 +15,80 @@ export default function OrderDetailsScreen() {
     const [showInvoice, setShowInvoice] = useState(false);
     const [showCancelModal, setShowCancelModal] = useState(false);
 
-    // Mock data initial state
-    const [order, setOrder] = useState({
-        id: id || '1',
-        orderId: '#ORD-2023-1001',
-        status: 'Order Placed',
-        date: 'Oct 24, 2023',
-        time: '10:30 AM',
-        from: 'Dubai Mall, Downtown Dubai',
-        fromDetails: 'Building A, Floor 2, Shop 205',
-        to: 'Marina Towers, Dubai Marina',
-        toDetails: 'Tower B, Apartment 1504',
-        price: 'AED 35.00',
-        vehicle: 'Bike Delivery',
-        driver: {
-            name: 'Ahmed Hassan',
-            phone: '+971 50 123 4567',
-            rating: 4.8,
-        },
-        timeline: [
-            { status: 'Order Placed', time: '10:00 AM', completed: true },
-            { status: 'Driver Assigned', time: '10:05 AM', completed: true },
-            { status: 'Picked Up', time: '', completed: false },
-            { status: 'In Transit', time: '', completed: false },
-            { status: 'Delivered', time: '', completed: false },
-        ],
-        breakdown: [
-            { label: 'Delivery Fee', amount: 'AED 30.00' },
-            { label: 'Service Fee', amount: 'AED 3.50' },
-            { label: 'Tax', amount: 'AED 1.50' },
-        ],
+    const { data: order, isLoading, isError, refetch } = useGetOrderByIdQuery(id as string, {
+        skip: !id,
+        refetchOnMountOrArgChange: true
     });
+    const [cancelOrder, { isLoading: isCancelling }] = useCancelOrderMutation();
 
     const handleCancelOrder = () => {
         setShowCancelModal(true);
     };
 
-    const confirmCancel = (reason: string) => {
-        console.log("Cancelled due to:", reason);
-        setOrder(prev => ({ ...prev, status: 'Cancelled' }));
-        setShowCancelModal(false);
-        setTimeout(() => {
+    const confirmCancel = async (reason: string) => {
+        try {
+            await cancelOrder({ id: id as string, reason }).unwrap();
+            setShowCancelModal(false);
             Alert.alert("Order Cancelled", "Your order has been cancelled successfully.");
-        }, 500);
-    };
-
-    const getStatusConfig = (status: string) => {
-        switch (status) {
-            case 'Delivered':
-                return { bg: '#E8F5E9', text: '#2E7D32', icon: 'checkmark-circle' as const };
-            case 'In Transit':
-                return { bg: '#E3F2FD', text: '#1565C0', icon: 'bicycle' as const };
-            case 'Cancelled':
-                return { bg: '#FFEBEE', text: '#C62828', icon: 'close-circle' as const };
-            case 'Order Placed':
-            case 'Driver Assigned':
-                return { bg: '#FFF3E0', text: '#EF6C00', icon: 'time' as const };
-            default:
-                return { bg: '#F5F5F5', text: '#616161', icon: 'help-circle' as const };
+            refetch();
+        } catch (error: any) {
+            Alert.alert("Error", error?.data?.message || "Failed to cancel order. Please try again.");
         }
     };
 
+    const getStatusConfig = (status: string) => {
+        // Map backend status to UI labels
+        const statusMap: Record<string, string> = {
+            'Pending': 'Order Placed',
+            'Accepted': 'Driver Assigned',
+            'ArrivedPickup': 'Rider Arrived',
+            'InProgress': 'In Transit',
+            'Completed': 'Delivered',
+            'Cancelled': 'Cancelled'
+        };
+
+        const displayStatus = statusMap[status] || status;
+
+        switch (displayStatus) {
+            case 'Delivered':
+                return { label: displayStatus, bg: '#E8F5E9', text: '#2E7D32', icon: 'checkmark-circle' as const };
+            case 'In Transit':
+                return { label: displayStatus, bg: '#E3F2FD', text: '#1565C0', icon: 'bicycle' as const };
+            case 'Cancelled':
+                return { label: displayStatus, bg: '#FFEBEE', text: '#C62828', icon: 'close-circle' as const };
+            case 'Order Placed':
+            case 'Driver Assigned':
+            case 'Rider Arrived':
+                return { label: displayStatus, bg: '#FFF3E0', text: '#EF6C00', icon: 'time' as const };
+            default:
+                return { label: displayStatus, bg: '#F5F5F5', text: '#616161', icon: 'help-circle' as const };
+        }
+    };
+
+    if (isLoading) {
+        return (
+            <View style={[styles.container, styles.centered]}>
+                <ActivityIndicator size="large" color={Colors.primary} />
+                <Text style={styles.loadingText}>Loading order details...</Text>
+            </View>
+        );
+    }
+
+    if (isError || !order) {
+        return (
+            <View style={[styles.container, styles.centered]}>
+                <Ionicons name="alert-circle-outline" size={64} color="#FF5252" />
+                <Text style={styles.errorTitle}>Oops! Something went wrong</Text>
+                <Text style={styles.errorText}>We couldn't load your order details.</Text>
+                <TouchableOpacity style={styles.retryButton} onPress={refetch}>
+                    <Text style={styles.retryText}>Retry</Text>
+                </TouchableOpacity>
+            </View>
+        );
+    }
+
     const statusConfig = getStatusConfig(order.status);
+    const orderDisplayId = (order._id || order.id || "").slice(-8).toUpperCase();
 
     return (
         <View style={styles.container}>
@@ -105,11 +118,11 @@ export default function OrderDetailsScreen() {
                     <View style={[styles.statusBadge, { backgroundColor: statusConfig.bg }]}>
                         <Ionicons name={statusConfig.icon} size={24} color={statusConfig.text} />
                         <Text style={[styles.statusText, { color: statusConfig.text }]}>
-                            {order.status}
+                            {statusConfig.label}
                         </Text>
                     </View>
-                    <Text style={styles.orderId}>{order.orderId}</Text>
-                    <Text style={styles.orderDate}>{order.date} at {order.time}</Text>
+                    <Text style={styles.orderId}>#{orderDisplayId}</Text>
+                    <Text style={styles.orderDate}>{new Date(order.createdAt).toLocaleDateString()} at {new Date(order.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</Text>
                 </Animated.View>
 
                 {/* Locations */}
@@ -124,8 +137,10 @@ export default function OrderDetailsScreen() {
                             <PickupIcon size={24} />
                             <View style={styles.locationTextContainer}>
                                 <Text style={styles.locationLabel}>Pickup Location</Text>
-                                <Text style={styles.locationText}>{order.from}</Text>
-                                <Text style={styles.locationDetails}>{order.fromDetails}</Text>
+                                <Text style={styles.locationText}>{order.pickup?.addressLine || order.pickupAddress}</Text>
+                                {(order.pickup?.label || order.pickupAddressDetails) && (
+                                    <Text style={styles.locationDetails}>{order.pickup?.label || order.pickupAddressDetails}</Text>
+                                )}
                             </View>
                         </View>
 
@@ -135,8 +150,10 @@ export default function OrderDetailsScreen() {
                             <DropoffIcon size={24} />
                             <View style={styles.locationTextContainer}>
                                 <Text style={styles.locationLabel}>Dropoff Location</Text>
-                                <Text style={styles.locationText}>{order.to}</Text>
-                                <Text style={styles.locationDetails}>{order.toDetails}</Text>
+                                <Text style={styles.locationText}>{order.dropoff?.addressLine || order.dropoffAddress}</Text>
+                                {(order.dropoff?.label || order.dropoffAddressDetails) && (
+                                    <Text style={styles.locationDetails}>{order.dropoff?.label || order.dropoffAddressDetails}</Text>
+                                )}
                             </View>
                         </View>
                     </View>
@@ -154,15 +171,19 @@ export default function OrderDetailsScreen() {
                             <Ionicons name="person" size={32} color={Colors.primaryDark} />
                         </View>
                         <View style={styles.driverInfo}>
-                            <Text style={styles.driverName}>{order.driver.name}</Text>
-                            <View style={styles.ratingContainer}>
-                                <Ionicons name="star" size={14} color="#FFB800" />
-                                <Text style={styles.ratingText}>{order.driver.rating}</Text>
-                            </View>
+                            <Text style={styles.driverName}>{order.rider?.name || order.driver?.name || 'Searching for driver...'}</Text>
+                            {(order.rider || order.driver) && (
+                                <View style={styles.ratingContainer}>
+                                    <Ionicons name="star" size={14} color="#FFB800" />
+                                    <Text style={styles.ratingText}>{order.rider?.rating || order.driver?.rating || '5.0'}</Text>
+                                </View>
+                            )}
                         </View>
-                        <TouchableOpacity style={styles.callButton}>
-                            <Ionicons name="call" size={20} color="#fff" />
-                        </TouchableOpacity>
+                        {(order.rider?.phone || order.driver?.phone) && (
+                            <TouchableOpacity style={styles.callButton}>
+                                <Ionicons name="call" size={20} color="#fff" />
+                            </TouchableOpacity>
+                        )}
                     </View>
                 </Animated.View>
 
@@ -173,18 +194,26 @@ export default function OrderDetailsScreen() {
                 >
                     <Text style={styles.cardTitle}>Price Breakdown</Text>
 
-                    {order.breakdown.map((item, index) => (
-                        <View key={index} style={styles.breakdownRow}>
-                            <Text style={styles.breakdownLabel}>{item.label}</Text>
-                            <Text style={styles.breakdownAmount}>{item.amount}</Text>
+                    <View style={styles.breakdownRow}>
+                        <Text style={styles.breakdownLabel}>Base Price</Text>
+                        <Text style={styles.breakdownAmount}>AED {Number(order.originalPrice || order.price).toFixed(2)}</Text>
+                    </View>
+                    {order.discountAmount > 0 && (
+                        <View style={styles.breakdownRow}>
+                            <Text style={styles.breakdownLabel}>Discount ({order.discountType})</Text>
+                            <Text style={[styles.breakdownAmount, { color: '#2E7D32' }]}>-AED {Number(order.discountAmount).toFixed(2)}</Text>
                         </View>
-                    ))}
+                    )}
+                    <View style={styles.breakdownRow}>
+                        <Text style={styles.breakdownLabel}>Service Fee</Text>
+                        <Text style={styles.breakdownAmount}>AED {Number(order.serviceFee || 0).toFixed(2)}</Text>
+                    </View>
 
                     <View style={styles.divider} />
 
                     <View style={styles.totalRow}>
                         <Text style={styles.totalLabel}>Total Amount</Text>
-                        <Text style={styles.totalAmount}>{order.price}</Text>
+                        <Text style={styles.totalAmount}>AED {Number(order.price).toFixed(2)}</Text>
                     </View>
                 </Animated.View>
 
@@ -201,23 +230,26 @@ export default function OrderDetailsScreen() {
                         <Text style={styles.actionButtonText}>Download Receipt</Text>
                     </TouchableOpacity>
 
-                    {order.status === 'Delivered' && (
+                    {order.status === 'Completed' && (
                         <TouchableOpacity
                             style={[styles.actionButton, styles.actionButtonPrimary]}
-                            onPress={() => router.push('/(tab)/user/rate-driver')}
+                            onPress={() => router.push('/(tab)/orders/rate-driver')}
                         >
                             <Ionicons name="star-outline" size={20} color={Colors.text} />
                             <Text style={styles.actionButtonText}>Rate Driver</Text>
                         </TouchableOpacity>
                     )}
 
-                    {['Order Placed', 'Driver Assigned'].includes(order.status) && (
+                    {['Pending', 'Accepted'].includes(order.status) && (
                         <TouchableOpacity
                             style={[styles.actionButton, { borderColor: '#FF5252' }]}
                             onPress={handleCancelOrder}
+                            disabled={isCancelling}
                         >
                             <Ionicons name="close-circle-outline" size={20} color="#FF5252" />
-                            <Text style={[styles.actionButtonText, { color: '#FF5252' }]}>Cancel Order</Text>
+                            <Text style={[styles.actionButtonText, { color: '#FF5252' }]}>
+                                {isCancelling ? 'Cancelling...' : 'Cancel Order'}
+                            </Text>
                         </TouchableOpacity>
                     )}
                 </Animated.View>
@@ -498,5 +530,40 @@ const styles = StyleSheet.create({
         fontSize: 15,
         fontWeight: '700',
         color: Colors.text,
+    },
+    centered: {
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    loadingText: {
+        marginTop: 12,
+        fontSize: 16,
+        color: '#666',
+        fontWeight: '600',
+    },
+    errorTitle: {
+        fontSize: 20,
+        fontWeight: '800',
+        color: Colors.text,
+        marginTop: 16,
+        marginBottom: 8,
+    },
+    errorText: {
+        fontSize: 14,
+        color: '#666',
+        textAlign: 'center',
+        marginBottom: 24,
+        paddingHorizontal: 40,
+    },
+    retryButton: {
+        backgroundColor: Colors.primary,
+        paddingHorizontal: 32,
+        paddingVertical: 12,
+        borderRadius: 12,
+    },
+    retryText: {
+        color: '#fff',
+        fontSize: 16,
+        fontWeight: '700',
     },
 });

@@ -12,7 +12,7 @@ const SAVED_CARDS = [
 
 export default function CardsScreen() {
     const router = useRouter();
-    const [cards, setCards] = useState(SAVED_CARDS);
+    const [cards] = useState(SAVED_CARDS);
 
     const getCardIcon = (type: string) => {
         return type === 'Visa' ? 'card' : 'card-outline';

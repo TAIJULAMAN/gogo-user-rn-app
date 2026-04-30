@@ -1,8 +1,10 @@
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
-import React, { useState } from 'react';
+import React from 'react';
 import { Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { useAppDispatch, useAppSelector } from '../../../Redux/hooks';
+import { setSelectedVehicle, swapPickupAndDropoff } from '../../../Redux/Slice/orderDraftSlice';
 import { Colors } from '../../../constants/Colors';
 
 const STEPS = ['Locations', 'Vehicle', 'Checkout', 'Payment'];
@@ -42,8 +44,18 @@ const VEHICLES = [
 
 export default function VehicleSelectionScreen() {
     const router = useRouter();
-    const [currentStep, setCurrentStep] = useState(1);
-    const [selectedVehicle, setSelectedVehicle] = useState<string | null>(null);
+    const dispatch = useAppDispatch();
+    const currentStep = 1;
+    const { pickup, dropoff, stops, selectedVehicleId } = useAppSelector((state) => state.orderDraft);
+
+    const getContactLine = (location: typeof pickup) => {
+        const name = location?.personName?.trim() || 'Contact person';
+        const contactPhone = location?.phone?.trim() || 'Phone number';
+        return `${name} - ${contactPhone}`;
+    };
+
+    const getAddressLine = (address?: string, fallback?: string) =>
+        address?.trim() || fallback || 'Location not selected';
 
     const renderStepper = () => (
         <View style={styles.stepperContainer}>
@@ -101,29 +113,48 @@ export default function VehicleSelectionScreen() {
 
                             <View style={styles.locationsWrapper}>
                                 <View style={styles.locationItem}>
-                                    <Text style={styles.locationPerson}>Roshan Hegde • +971552239345</Text>
-                                    <Text style={styles.locationAddress} numberOfLines={1}>3401, Escape Tower, Business Bay, Dubai.</Text>
+                                    <Text style={styles.locationPerson}>{getContactLine(pickup)}</Text>
+                                    <Text style={styles.locationAddress} numberOfLines={1}>
+                                        {getAddressLine(pickup?.address, 'Choose pickup location')}
+                                    </Text>
                                 </View>
                                 <View style={{ height: 24 }} />
                                 <View style={styles.locationItem}>
-                                    <Text style={styles.locationPerson}>Roshan Hegde • +971552239345</Text>
-                                    <Text style={styles.locationAddress} numberOfLines={1}>1609, Elite 8 Sports Residence, Dubai Sports City, D...</Text>
+                                    <Text style={styles.locationPerson}>{getContactLine(dropoff)}</Text>
+                                    <Text style={styles.locationAddress} numberOfLines={1}>
+                                        {getAddressLine(dropoff?.address, 'Choose dropoff location')}
+                                    </Text>
                                 </View>
+                                {stops.map((stop, index) => (
+                                    <View key={stop.id}>
+                                        <View style={{ height: 24 }} />
+                                        <View style={styles.locationItem}>
+                                            <Text style={styles.locationPerson}>Stop {index + 1}</Text>
+                                            <Text style={styles.locationAddress} numberOfLines={1}>
+                                                {getAddressLine(stop.address, 'Choose stop location')}
+                                            </Text>
+                                        </View>
+                                    </View>
+                                ))}
                             </View>
 
-                            <TouchableOpacity style={styles.swapButton}>
+                            <TouchableOpacity
+                                style={styles.swapButton}
+                                onPress={() => dispatch(swapPickupAndDropoff())}
+                                activeOpacity={0.8}
+                            >
                                 <Ionicons name="swap-vertical" size={16} color="#333" />
                             </TouchableOpacity>
                         </View>
 
 
                         <View style={styles.journeyActions}>
-                            <TouchableOpacity style={styles.actionButton} onPress={() => router.push('/(tab)/user/add-stops')}>
+                            <TouchableOpacity style={styles.actionButton} onPress={() => router.push('/(tab)/orders/add-stops')}>
                                 <Ionicons name="add-circle-outline" size={18} color="#333" />
                                 <Text style={styles.actionButtonText}>Add Stop</Text>
                             </TouchableOpacity>
                             <View style={styles.actionDivider} />
-                            <TouchableOpacity style={styles.actionButton} onPress={() => router.push('/(tab)/user/add-stops')}>
+                            <TouchableOpacity style={styles.actionButton} onPress={() => router.push('/(tab)/orders/add-stops')}>
                                 <MaterialIcons name="edit" size={18} color="#333" />
                                 <Text style={styles.actionButtonText}>Edit Location</Text>
                             </TouchableOpacity>
@@ -137,7 +168,7 @@ export default function VehicleSelectionScreen() {
                         {VEHICLES.map((vehicle) => (
                             <TouchableOpacity
                                 key={vehicle.id}
-                                onPress={() => setSelectedVehicle(vehicle.id)}
+                                onPress={() => dispatch(setSelectedVehicle(vehicle.id))}
                                 activeOpacity={0.9}
                             >
                                 <LinearGradient
@@ -146,7 +177,7 @@ export default function VehicleSelectionScreen() {
                                     end={{ x: 1, y: 0 }}
                                     style={[
                                         styles.vehicleCard,
-                                        selectedVehicle === vehicle.id && styles.vehicleCardSelected
+                                        selectedVehicleId === vehicle.id && styles.vehicleCardSelected
                                     ]}
                                 >
                                     <View style={styles.vehicleImageContainer}>
@@ -165,7 +196,7 @@ export default function VehicleSelectionScreen() {
                         ))}
                     </View>
 
-                    <TouchableOpacity style={[styles.continueButton, { backgroundColor: '#BEFFB6' }]} onPress={() => router.push('/(tab)/user/checkout')}>
+                    <TouchableOpacity style={[styles.continueButton, { backgroundColor: '#BEFFB6' }]} onPress={() => router.push('/(tab)/orders/checkout')}>
                         <Text style={styles.continueButtonText}>Proceed to Checkout</Text>
                     </TouchableOpacity>
 

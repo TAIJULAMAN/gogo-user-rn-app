@@ -1,32 +1,156 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import React, { useState } from 'react';
-import { Image, ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import React, { useEffect, useRef, useState } from 'react';
+import { ActivityIndicator, Image, ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import MapView, { Marker, PROVIDER_GOOGLE, type LatLng } from 'react-native-maps';
 import Animated, { FadeInDown, FadeInUp, Layout } from 'react-native-reanimated';
+import { useAppDispatch } from '../../../Redux/hooks';
+import { setDropoffLocation } from '../../../Redux/Slice/orderDraftSlice';
 import { CustomInput } from '../../../components/CustomInput';
 import { Colors } from '../../../constants/Colors';
 
 const STEPS = ['Locations', 'Vehicle', 'Checkout', 'Payment'];
+const GOOGLE_PLACES_API_KEY = process.env.EXPO_PUBLIC_MAP_API_KEY;
+const DEFAULT_COORDINATE = {
+    latitude: 25.2048,
+    longitude: 55.2708,
+};
 
-const RECENT_LOCATIONS = [
-    { name: 'Jasani LLC', address: '305, 3rd Floor, Building 3, Bay Square, Business Bay' },
-    { name: 'Rashed Al Shamsi Advertising', address: 'Behind Haneefa Supermarket, Diera' },
-    { name: 'Nerds Company LLC', address: 'Behind Dubai Garden, Al Quoz' },
-    { name: 'Wisam Sign', address: 'Industrial Area 2, Sharjah' },
-];
+type GooglePlaceSuggestion = {
+    place_id: string;
+    structured_formatting?: {
+        main_text?: string;
+        secondary_text?: string;
+    };
+    description: string;
+};
 
-export default function PickupLocationScreen() {
+type LocationSuggestion = {
+    id: string;
+    name: string;
+    address: string;
+    description: string;
+};
+
+export default function DropoffLocationScreen() {
     const router = useRouter();
+    const dispatch = useAppDispatch();
+    const mapRef = useRef<MapView>(null);
     const [currentStep, setCurrentStep] = useState(0);
     const [searchQuery, setSearchQuery] = useState('');
     const [showDropdown, setShowDropdown] = useState(false);
+    const [locationSuggestions, setLocationSuggestions] = useState<LocationSuggestion[]>([]);
+    const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(false);
+    const [selectedCoordinate, setSelectedCoordinate] = useState<LatLng>(DEFAULT_COORDINATE);
     const [details, setDetails] = useState('');
     const [personName, setPersonName] = useState('');
     const [phone, setPhone] = useState('');
 
-    const handleSelectLocation = (location: string) => {
-        setSearchQuery(location);
+    useEffect(() => {
+        const query = searchQuery.trim();
+
+        if (query.length < 2) {
+            setLocationSuggestions([]);
+            setIsLoadingSuggestions(false);
+            return;
+        }
+
+        const controller = new AbortController();
+        const timeoutId = setTimeout(async () => {
+            if (!GOOGLE_PLACES_API_KEY) {
+                setLocationSuggestions([]);
+                setIsLoadingSuggestions(false);
+                return;
+            }
+
+            setIsLoadingSuggestions(true);
+
+            try {
+                const params = new URLSearchParams({
+                    input: query,
+                    key: GOOGLE_PLACES_API_KEY,
+                    components: 'country:ae',
+                });
+                const response = await fetch(
+                    `https://maps.googleapis.com/maps/api/place/autocomplete/json?${params.toString()}`,
+                    { signal: controller.signal }
+                );
+                const result = await response.json();
+                const suggestions = Array.isArray(result.predictions)
+                    ? result.predictions.map((item: GooglePlaceSuggestion) => ({
+                        id: item.place_id,
+                        name: item.structured_formatting?.main_text || item.description,
+                        address: item.structured_formatting?.secondary_text || item.description,
+                        description: item.description,
+                    }))
+                    : [];
+
+                setLocationSuggestions(suggestions);
+            } catch (error: any) {
+                if (error?.name !== 'AbortError') {
+                    setLocationSuggestions([]);
+                }
+            } finally {
+                setIsLoadingSuggestions(false);
+            }
+        }, 350);
+
+        return () => {
+            controller.abort();
+            clearTimeout(timeoutId);
+        };
+    }, [searchQuery]);
+
+    const handleSelectLocation = async (location: LocationSuggestion) => {
+        setSearchQuery(location.description);
         setShowDropdown(false);
+
+        if (!GOOGLE_PLACES_API_KEY) {
+            return;
+        }
+
+        try {
+            const params = new URLSearchParams({
+                place_id: location.id,
+                fields: 'geometry',
+                key: GOOGLE_PLACES_API_KEY,
+            });
+            const response = await fetch(
+                `https://maps.googleapis.com/maps/api/place/details/json?${params.toString()}`
+            );
+            const result = await response.json();
+            const coordinates = result?.result?.geometry?.location;
+
+            if (typeof coordinates?.lat === 'number' && typeof coordinates?.lng === 'number') {
+                const nextCoordinate = {
+                    latitude: coordinates.lat,
+                    longitude: coordinates.lng,
+                };
+
+                setSelectedCoordinate(nextCoordinate);
+                mapRef.current?.animateToRegion(
+                    {
+                        ...nextCoordinate,
+                        latitudeDelta: 0.01,
+                        longitudeDelta: 0.01,
+                    },
+                    350
+                );
+            }
+        } catch {
+            // Keep the selected text even if map details cannot be loaded.
+        }
+    };
+
+    const handleContinue = () => {
+        dispatch(setDropoffLocation({
+            address: searchQuery,
+            details,
+            personName,
+            phone,
+            coordinate: selectedCoordinate,
+        }));
+        router.push('/(tab)/orders/add-stops');
     };
 
     const renderStepper = () => (
@@ -78,7 +202,7 @@ export default function PickupLocationScreen() {
                 <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
                     <Ionicons name="arrow-back" size={24} color="#000" />
                 </TouchableOpacity>
-                <Text style={styles.headerTitle}>Pickup Location</Text>
+                <Text style={styles.headerTitle}>Dropoff Location</Text>
                 <View style={{ width: 24 }} />
             </Animated.View>
 
@@ -92,14 +216,14 @@ export default function PickupLocationScreen() {
                 >
                     <View style={styles.locationIconContainer}>
                         <Image
-                            source={require('../../../assets/pick.png')}
+                            source={require('../../../assets/drop.png')}
                             style={{ width: 40, height: 40 }}
                             resizeMode="contain"
                         />
                     </View>
                     <View>
-                        <Text style={styles.pageTitle}>Pickup Location</Text>
-                        <Text style={styles.pageSubtitle}>Choose where to pickup</Text>
+                        <Text style={styles.pageTitle}>Dropoff Location</Text>
+                        <Text style={styles.pageSubtitle}>Choose where to drop</Text>
                     </View>
                 </Animated.View>
 
@@ -132,12 +256,30 @@ export default function PickupLocationScreen() {
                             entering={FadeInDown.duration(300)}
                             style={styles.dropdownOverlay}
                         >
-                            <Text style={styles.recentDropsTitle}>Recent Locations</Text>
-                            {RECENT_LOCATIONS.map((item, index) => (
+                            <Text style={styles.recentDropsTitle}>Locations</Text>
+                            {isLoadingSuggestions && (
+                                <View style={styles.dropdownState}>
+                                    <ActivityIndicator color={Colors.primaryDark} />
+                                </View>
+                            )}
+
+                            {!isLoadingSuggestions && searchQuery.trim().length < 2 && (
+                                <View style={styles.dropdownState}>
+                                    <Text style={styles.dropdownStateText}>Type at least 2 characters</Text>
+                                </View>
+                            )}
+
+                            {!isLoadingSuggestions && searchQuery.trim().length >= 2 && locationSuggestions.length === 0 && (
+                                <View style={styles.dropdownState}>
+                                    <Text style={styles.dropdownStateText}>No Google Maps suggestions found</Text>
+                                </View>
+                            )}
+
+                            {!isLoadingSuggestions && locationSuggestions.map((item) => (
                                 <TouchableOpacity
-                                    key={index}
+                                    key={item.id}
                                     style={styles.dropdownItem}
-                                    onPress={() => handleSelectLocation(item.name + ', ' + item.address)}
+                                    onPress={() => handleSelectLocation(item)}
                                 >
                                     <View style={styles.dropdownIconContainer}>
                                         <Ionicons name="location-outline" size={20} color={Colors.primaryDark} />
@@ -164,18 +306,25 @@ export default function PickupLocationScreen() {
                         entering={FadeInDown.delay(400).duration(600)}
                         style={styles.mapContainer}
                     >
-                        <Image
-                            source={require('../../../assets/images/map-placeholder.png')}
-                            style={{ width: '100%', height: '100%' }}
-                            resizeMode="cover"
-                        />
-                        <View style={styles.mapOverlay}>
-                            <Image
-                                source={require('../../../assets/pick.png')}
-                                style={{ width: 40, height: 40 }}
-                                resizeMode="contain"
-                            />
-                        </View>
+                        <MapView
+                            ref={mapRef}
+                            provider={PROVIDER_GOOGLE}
+                            style={styles.map}
+                            initialRegion={{
+                                ...DEFAULT_COORDINATE,
+                                latitudeDelta: 0.08,
+                                longitudeDelta: 0.08,
+                            }}
+                            onPress={(event) => setSelectedCoordinate(event.nativeEvent.coordinate)}
+                        >
+                            <Marker coordinate={selectedCoordinate}>
+                                <Image
+                                    source={require('../../../assets/drop.png')}
+                                    style={{ width: 40, height: 40 }}
+                                    resizeMode="contain"
+                                />
+                            </Marker>
+                        </MapView>
                     </Animated.View>
 
                     {/* Form */}
@@ -210,10 +359,10 @@ export default function PickupLocationScreen() {
 
                         <TouchableOpacity
                             style={styles.continueButton}
-                            onPress={() => router.push('/(tab)/user/drop-location')}
+                            onPress={handleContinue}
                             activeOpacity={0.8}
                         >
-                            <Text style={styles.continueButtonText}>Continue to Drop Location</Text>
+                            <Text style={styles.continueButtonText}>Continue to Add Stops</Text>
                             <Ionicons name="arrow-forward" size={24} color="#000" />
                         </TouchableOpacity>
                     </Animated.View>
@@ -340,11 +489,9 @@ const styles = StyleSheet.create({
         backgroundColor: '#EEE',
         position: 'relative',
     },
-    mapOverlay: {
-        position: 'absolute',
-        top: '50%',
-        left: '50%',
-        transform: [{ translateX: -20 }, { translateY: -20 }],
+    map: {
+        width: '100%',
+        height: '100%',
     },
     formContainer: {
         gap: 4,
@@ -414,13 +561,24 @@ const styles = StyleSheet.create({
         width: 36,
         height: 36,
         borderRadius: 18,
-        backgroundColor: '#F0FFF0',
+        backgroundColor: '#FFF0F0',
         alignItems: 'center',
         justifyContent: 'center',
         marginRight: 12,
     },
     dropdownTextContainer: {
         flex: 1,
+    },
+    dropdownState: {
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingVertical: 20,
+        paddingHorizontal: 16,
+    },
+    dropdownStateText: {
+        fontSize: 13,
+        color: '#999',
+        textAlign: 'center',
     },
     dropdownItemName: {
         fontSize: 14,

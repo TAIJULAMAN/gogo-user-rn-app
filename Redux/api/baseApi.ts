@@ -1,5 +1,4 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
-import { getBaseUrl } from "../../config/envConfig";
 
 interface RootState {
   auth: {
@@ -10,7 +9,7 @@ interface RootState {
 export const baseApi = createApi({
   reducerPath: "baseApi",
   baseQuery: fetchBaseQuery({
-    baseUrl: getBaseUrl(),
+    baseUrl: process.env.EXPO_PUBLIC_SERVER_URL,
     prepareHeaders: (headers, { getState }) => {
       const state = getState() as RootState;
       const token = state?.auth?.token;
@@ -22,5 +21,5 @@ export const baseApi = createApi({
     },
   }),
   endpoints: () => ({}),
-  tagTypes: ["auth", "user", "addresses", "common"],
+  tagTypes: ["auth", "user", "addresses", "common", "payments", "orders"],
 });

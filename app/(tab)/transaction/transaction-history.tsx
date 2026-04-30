@@ -1,26 +1,24 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
-import { ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, RefreshControl, ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
+import { useGetPaymentHistoryQuery } from '../../../Redux/api/paymentApi';
 import { Colors } from '../../../constants/Colors';
-
-const ALL_TRANSACTIONS = [
-    { id: '1', type: 'Payment', desc: 'Order #ORD-2023-1001', amount: '- AED 35.00', date: 'Oct 24, 2023', time: '10:30 AM', icon: 'remove-circle-outline', color: '#F44336' },
-    { id: '2', type: 'Payment', desc: 'Order #ORD-2023-1002', amount: '- AED 28.50', date: 'Oct 23, 2023', time: '2:15 PM', icon: 'remove-circle-outline', color: '#F44336' },
-    { id: '3', type: 'Refund', desc: 'Order #ORD-2023-1003 Cancelled', amount: '+ AED 42.00', date: 'Oct 22, 2023', time: '9:00 AM', icon: 'add-circle-outline', color: '#4CAF50' },
-    { id: '4', type: 'Payment', desc: 'Order #ORD-2023-1004', amount: '- AED 52.00', date: 'Oct 21, 2023', time: '4:45 PM', icon: 'remove-circle-outline', color: '#F44336' },
-    { id: '5', type: 'Payment', desc: 'Order #ORD-2023-1005', amount: '- AED 18.50', date: 'Oct 20, 2023', time: '11:20 AM', icon: 'remove-circle-outline', color: '#F44336' },
-    { id: '6', type: 'Refund', desc: 'Order #ORD-2023-1006 Cancelled', amount: '+ AED 25.00', date: 'Oct 19, 2023', time: '3:10 PM', icon: 'add-circle-outline', color: '#4CAF50' },
-];
+import { getPaymentArray, toTransactionItem } from './paymentFormatters';
 
 const FILTERS = ['All', 'Payments', 'Refunds'];
 
 export default function TransactionHistoryScreen() {
     const router = useRouter();
     const [selectedFilter, setSelectedFilter] = useState('All');
+    const { data, isError, isFetching, refetch } = useGetPaymentHistoryQuery({
+        page: 1,
+        limit: 50,
+    });
+    const transactions = getPaymentArray(data).map(toTransactionItem);
 
-    const filteredTransactions = ALL_TRANSACTIONS.filter(transaction => {
+    const filteredTransactions = transactions.filter(transaction => {
         if (selectedFilter === 'All') return true;
         if (selectedFilter === 'Payments') return transaction.type === 'Payment';
         if (selectedFilter === 'Refunds') return transaction.type === 'Refund';
@@ -71,7 +69,30 @@ export default function TransactionHistoryScreen() {
             <ScrollView
                 showsVerticalScrollIndicator={false}
                 contentContainerStyle={styles.scrollContent}
+                refreshControl={
+                    <RefreshControl refreshing={isFetching} onRefresh={refetch} />
+                }
             >
+                {isFetching && filteredTransactions.length === 0 && (
+                    <View style={styles.emptyState}>
+                        <ActivityIndicator color={Colors.primaryDark} />
+                    </View>
+                )}
+
+                {isError && filteredTransactions.length === 0 && (
+                    <TouchableOpacity
+                        style={styles.emptyState}
+                        onPress={refetch}
+                        activeOpacity={0.7}
+                    >
+                        <Ionicons name="alert-circle-outline" size={80} color="#E0E0E0" />
+                        <Text style={styles.emptyTitle}>Unable to Load</Text>
+                        <Text style={styles.emptyMessage}>
+                            Tap to refresh transaction history
+                        </Text>
+                    </TouchableOpacity>
+                )}
+
                 {filteredTransactions.map((item, index) => (
                     <Animated.View
                         key={item.id}
@@ -85,7 +106,7 @@ export default function TransactionHistoryScreen() {
                             <View style={styles.transactionInfo}>
                                 <Text style={styles.transactionType}>{item.type}</Text>
                                 <Text style={styles.transactionDesc}>{item.desc}</Text>
-                                <Text style={styles.transactionDate}>{item.date} • {item.time}</Text>
+                                <Text style={styles.transactionDate}>{item.date} - {item.time}</Text>
                             </View>
 
                             <Text style={[
@@ -98,7 +119,7 @@ export default function TransactionHistoryScreen() {
                     </Animated.View>
                 ))}
 
-                {filteredTransactions.length === 0 && (
+                {!isFetching && !isError && filteredTransactions.length === 0 && (
                     <View style={styles.emptyState}>
                         <Ionicons name="receipt-outline" size={80} color="#E0E0E0" />
                         <Text style={styles.emptyTitle}>No Transactions</Text>

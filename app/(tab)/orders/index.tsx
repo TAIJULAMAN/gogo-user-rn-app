@@ -1,45 +1,11 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Stack, useRouter } from 'expo-router';
-import { ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, RefreshControl, ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
-import { DropoffIcon, PickupIcon } from '../../components/LocationIcons';
-import { Colors } from '../../constants/Colors';
-
-const MOCK_ORDERS = [
-    {
-        id: '1',
-        status: 'Delivered',
-        date: 'Oct 24, 2023',
-        time: '10:30 AM',
-        from: 'Dubai Mall, Downtown',
-        to: 'Marina Towers, Dubai Marina',
-        price: 'AED 35.00',
-        vehicle: 'Bike',
-        orderId: '#ORD-2023-1001',
-    },
-    {
-        id: '2',
-        status: 'In Transit',
-        date: 'Today',
-        time: '2:15 PM',
-        from: 'Business Bay, Tower A',
-        to: 'JLT Cluster V, Office 305',
-        price: 'AED 28.50',
-        vehicle: 'Car',
-        orderId: '#ORD-2023-1002',
-    },
-    {
-        id: '3',
-        status: 'Cancelled',
-        date: 'Oct 20, 2023',
-        time: '09:00 AM',
-        from: 'Deira City Center',
-        to: 'Al Barsha 1, Villa 23',
-        price: 'AED 42.00',
-        vehicle: 'Truck',
-        orderId: '#ORD-2023-1003',
-    },
-];
+import { useGetOrdersQuery } from '../../../Redux/api/orderApi';
+import { DropoffIcon, PickupIcon } from '../../../components/LocationIcons';
+import { Colors } from '../../../constants/Colors';
+import { getOrderArray, getOrderTotal, toOrderItem } from './orderFormatters';
 
 const getStatusConfig = (status: string) => {
     switch (status) {
@@ -72,8 +38,14 @@ const getStatusConfig = (status: string) => {
 
 export default function OrdersScreen() {
     const router = useRouter();
+    const { data, isError, isFetching, refetch } = useGetOrdersQuery({
+        page: 1,
+        limit: 20,
+    });
+    const orders = getOrderArray(data).map(toOrderItem);
+    const totalOrders = getOrderTotal(data);
 
-    const renderOrder = (item: typeof MOCK_ORDERS[0], index: number) => {
+    const renderOrder = (item: ReturnType<typeof toOrderItem>, index: number) => {
         const statusConfig = getStatusConfig(item.status);
 
         return (
@@ -83,7 +55,7 @@ export default function OrdersScreen() {
             >
                 <TouchableOpacity
                     style={styles.orderCard}
-                    onPress={() => router.push(`/(tab)/user/order-details?id=${item.id}`)}
+                    onPress={() => router.push(`/(tab)/orders/order-details?id=${item.id}`)}
                     activeOpacity={0.7}
                 >
                     {/* Header */}
@@ -150,14 +122,43 @@ export default function OrdersScreen() {
 
             <View style={styles.header}>
                 <Text style={styles.title}>My Orders</Text>
-                <Text style={styles.subtitle}>{MOCK_ORDERS.length} orders in total</Text>
+                <Text style={styles.subtitle}>{totalOrders} orders in total</Text>
             </View>
 
             <ScrollView
                 showsVerticalScrollIndicator={false}
                 contentContainerStyle={styles.listContent}
+                refreshControl={
+                    <RefreshControl refreshing={isFetching} onRefresh={refetch} />
+                }
             >
-                {MOCK_ORDERS.map((item, index) => renderOrder(item, index))}
+                {isFetching && orders.length === 0 && (
+                    <View style={styles.emptyState}>
+                        <ActivityIndicator color={Colors.primaryDark} />
+                    </View>
+                )}
+
+                {isError && orders.length === 0 && (
+                    <TouchableOpacity
+                        style={styles.emptyState}
+                        onPress={refetch}
+                        activeOpacity={0.7}
+                    >
+                        <Ionicons name="alert-circle-outline" size={72} color="#E0E0E0" />
+                        <Text style={styles.emptyTitle}>Unable to Load Orders</Text>
+                        <Text style={styles.emptyMessage}>Tap to refresh your orders</Text>
+                    </TouchableOpacity>
+                )}
+
+                {!isFetching && !isError && orders.length === 0 && (
+                    <View style={styles.emptyState}>
+                        <Ionicons name="bag-handle-outline" size={72} color="#E0E0E0" />
+                        <Text style={styles.emptyTitle}>No Orders Yet</Text>
+                        <Text style={styles.emptyMessage}>Your orders will appear here</Text>
+                    </View>
+                )}
+
+                {orders.map((item, index) => renderOrder(item, index))}
             </ScrollView>
         </View>
     );
@@ -293,5 +294,25 @@ const styles = StyleSheet.create({
         fontSize: 16,
         fontWeight: '800',
         color: Colors.text,
+    },
+    emptyState: {
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingVertical: 80,
+        paddingHorizontal: 24,
+    },
+    emptyTitle: {
+        fontSize: 20,
+        fontWeight: '800',
+        color: Colors.text,
+        marginTop: 20,
+        marginBottom: 8,
+        textAlign: 'center',
+    },
+    emptyMessage: {
+        fontSize: 15,
+        color: '#666',
+        textAlign: 'center',
+        lineHeight: 22,
     },
 });

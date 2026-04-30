@@ -1,11 +1,11 @@
 {
   "expo": {
     "name": "Gogo User",
-    "slug": "gogo-rn-app",
+    "slug": "gogo-user",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "gogornapp",
+    "scheme": "gogo",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
