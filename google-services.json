@@ -7,6 +7,25 @@
   "client": [
     {
       "client_info": {
+        "mobilesdk_app_id": "1:368132898837:android:99c914cc3868d41c9dce1c",
+        "android_client_info": {
+          "package_name": "com.gogo.driver"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBYsYSPXFL_Ae6u3xnYnsfwNauyThP5tDc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
         "mobilesdk_app_id": "1:368132898837:android:b03274385e5348759dce1c",
         "android_client_info": {
           "package_name": "com.gogo.user"
