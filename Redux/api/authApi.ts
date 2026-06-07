@@ -54,6 +54,37 @@ const authApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: ["auth"],
     }),
+    sendOtp: builder.mutation({
+      query: (data) => ({
+        url: "auth/send-otp",
+        method: "POST",
+        body: data,
+      }),
+    }),
+    changePassword: builder.mutation({
+      query: (data) => ({
+        url: "auth/change-password",
+        method: "POST",
+        body: data,
+      }),
+      invalidatesTags: ["auth"],
+    }),
+    setNewPassword: builder.mutation({
+      query: (data) => ({
+        url: "auth/set-new-password",
+        method: "POST",
+        body: data,
+      }),
+      invalidatesTags: ["auth"],
+    }),
+    logout: builder.mutation({
+      query: (data) => ({
+        url: "auth/logout",
+        method: "POST",
+        body: data,
+      }),
+      invalidatesTags: ["auth"],
+    }),
   }),
 });
 
@@ -63,6 +94,10 @@ export const {
   useVerifyUserPhoneMutation,
   useCheckUserByPhoneMutation,
   useRefreshTokenMutation,
+  useSendOtpMutation,
+  useChangePasswordMutation,
+  useSetNewPasswordMutation,
+  useLogoutMutation,
 } = authApi;
 
 export default authApi;

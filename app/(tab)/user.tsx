@@ -40,7 +40,7 @@ export default function HomeScreen() {
     const activeVehicleId = selectedVehicleId || 'car';
     const userName = [user?.firstName, user?.lastName].filter(Boolean).join(' ') || user?.name || user?.email || 'User';
 
-    const notifications = notificationsData?.data || [];
+    const notifications = notificationsData?.data?.result || (Array.isArray(notificationsData?.data) ? notificationsData?.data : []);
     const unreadCount = notifications.filter((n: any) => !n.isRead).length;
 
     const handleBookNow = () => {

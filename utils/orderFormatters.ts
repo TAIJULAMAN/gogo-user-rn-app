@@ -33,7 +33,8 @@ export const getOrderArray = (response: unknown): Order[] => {
     return response;
   }
 
-  const data = (response as ApiResponse<Order[]> | undefined)?.data;
+  const data = (response as any)?.data;
+  if (Array.isArray(data?.result)) return data.result;
   return Array.isArray(data) ? data : [];
 };
 

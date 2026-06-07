@@ -45,6 +45,7 @@ export default function PaymentScreen() {
   const [transactionUrl, setTransactionUrl] = useState<string | null>(null);
   const [currentChargeId, setCurrentChargeId] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [createdOrderId, setCreatedOrderId] = useState<string | null>(null);
 
   const [createOrder] = useCreateOrderMutation();
   
@@ -79,6 +80,7 @@ export default function PaymentScreen() {
       }
 
       const orderId = orderResponse.data._id;
+      setCreatedOrderId(orderId);
 
       if (selectedMethod === "cash") {
         // Cash order created successfully
@@ -128,7 +130,12 @@ export default function PaymentScreen() {
 
   const handleCloseModal = () => {
     setShowSuccessModal(false);
-    router.replace("/orders/running-order");
+    router.dismissAll()
+    if (createdOrderId) {
+      router.replace(`/orders/running-order?id=${createdOrderId}`);
+    } else {
+      router.replace("/orders/running-order");
+    }
   };
 
   const renderStepper = () => (

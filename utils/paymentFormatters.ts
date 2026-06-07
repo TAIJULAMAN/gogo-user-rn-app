@@ -21,7 +21,8 @@ export const getPaymentArray = (response: unknown): Payment[] => {
     return response;
   }
 
-  const data = (response as ApiResponse<Payment[]> | undefined)?.data;
+  const data = (response as any)?.data;
+  if (Array.isArray(data?.result)) return data.result;
   return Array.isArray(data) ? data : [];
 };
 
