@@ -9,7 +9,7 @@ import { Colors } from '../../../constants/Colors';
 export default function TermsOfServiceScreen() {
     const router = useRouter();
     const { data, isLoading } = useGetCommonContentQuery(undefined);
-    const terms = data?.data?.termsAndConditions?.trim();
+    const terms = data?.data?.termsOfService?.trim();
 
     return (
         <View style={styles.container}>

@@ -4,40 +4,55 @@ import React, { useState } from 'react';
 import { Alert, Linking, ScrollView, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
 import { Colors } from '../../../constants/Colors';
+import { useGetCommonContentQuery, useCreateReportMutation } from '../../../Redux/api/commonApi';
+import { useGetUserProfileQuery } from '../../../Redux/api/userApi';
 
 export default function ContactUsScreen() {
     const router = useRouter();
+    const { data: contentData } = useGetCommonContentQuery(undefined);
+    const { data: profileData } = useGetUserProfileQuery(undefined);
+    const [createReport, { isLoading: isSubmitting }] = useCreateReportMutation();
+
     const [subject, setSubject] = useState('');
     const [message, setMessage] = useState('');
 
-    const handleSubmit = () => {
+    const contactEmail = contentData?.data?.contactUs?.email || 'support@gogo.ae';
+    const contactPhone = contentData?.data?.contactUs?.phone || '+971 50 123 4567';
+
+    const handleSubmit = async () => {
         if (!subject || !message) {
             Alert.alert('Error', 'Please fill in all fields');
             return;
         }
 
-        Alert.alert(
-            'Success',
-            'Your message has been sent. We\'ll get back to you soon!',
-            [
-                {
-                    text: 'OK',
-                    onPress: () => router.back()
-                }
-            ]
-        );
+        try {
+            await createReport({
+                title: subject,
+                description: message,
+                reporter: profileData?.data?._id,
+                reporterRole: 'User'
+            }).unwrap();
+
+            Alert.alert('Success', 'Your message has been sent. We will get back to you shortly.', [
+                { text: 'OK', onPress: () => router.back() }
+            ]);
+        } catch (error: any) {
+            console.error("Submit report error:", error);
+            Alert.alert("Error", error?.data?.message || "Failed to send message. Please try again.");
+        }
     };
 
     const openPhone = () => {
-        Linking.openURL('tel:+971501234567');
+        Linking.openURL(`tel:${contactPhone}`);
     };
 
     const openEmail = () => {
-        Linking.openURL('mailto:support@gogo.ae');
+        Linking.openURL(`mailto:${contactEmail}`);
     };
 
     const openWhatsApp = () => {
-        Linking.openURL('https://wa.me/971501234567');
+        const numericPhone = contactPhone.replace(/[^0-9]/g, '');
+        Linking.openURL(`https://wa.me/${numericPhone}`);
     };
 
     return (

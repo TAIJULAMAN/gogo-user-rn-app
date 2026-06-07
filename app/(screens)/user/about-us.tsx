@@ -4,16 +4,22 @@ import React from 'react';
 import { Linking, ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
 import { Colors } from '../../../constants/Colors';
+import { useGetCommonContentQuery } from '../../../Redux/api/commonApi';
 
 export default function AboutUsScreen() {
     const router = useRouter();
+    const { data: contentData } = useGetCommonContentQuery(undefined);
+    
+    const aboutText = contentData?.data?.aboutUs || "At GOGO, we're on a mission to revolutionize delivery services across the UAE. We believe in making deliveries fast, reliable, and accessible to everyone.";
+    const contactEmail = contentData?.data?.contactUs?.email || 'info@gogo.ae';
+    const contactPhone = contentData?.data?.contactUs?.phone || '+971 50 123 4567';
 
     const openWebsite = () => {
         Linking.openURL('https://gogo.ae');
     };
 
     const openEmail = () => {
-        Linking.openURL('mailto:info@gogo.ae');
+        Linking.openURL(`mailto:${contactEmail}`);
     };
 
     return (
@@ -47,7 +53,7 @@ export default function AboutUsScreen() {
                     <View style={styles.section}>
                         <Text style={styles.sectionTitle}>Our Mission</Text>
                         <Text style={styles.paragraph}>
-                            At GOGO, we're on a mission to revolutionize delivery services across the UAE. We believe in making deliveries fast, reliable, and accessible to everyone.
+                            {aboutText}
                         </Text>
                     </View>
 
@@ -116,7 +122,7 @@ export default function AboutUsScreen() {
 
                         <TouchableOpacity style={styles.contactItem} onPress={openEmail}>
                             <Ionicons name="mail" size={20} color={Colors.primaryDark} />
-                            <Text style={styles.contactText}>info@gogo.ae</Text>
+                            <Text style={styles.contactText}>{contactEmail}</Text>
                         </TouchableOpacity>
 
                         <TouchableOpacity style={styles.contactItem} onPress={openWebsite}>
