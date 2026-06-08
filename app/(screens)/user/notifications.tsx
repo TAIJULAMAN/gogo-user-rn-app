@@ -27,7 +27,7 @@ const NOTIFICATIONS: Notification[] = [
         id: '2',
         type: 'payment',
         title: 'Payment Successful',
-        message: 'Payment of $39.82 was successful',
+        message: 'Payment of AED 39.82 was successful',
         time: '1 hour ago',
         read: false,
     },

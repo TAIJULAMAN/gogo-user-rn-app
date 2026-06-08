@@ -20,7 +20,7 @@ export default function ReferralScreen() {
     const handleShare = async () => {
         try {
             await Share.share({
-                message: `Hey! Use my referral code ${referralCode} to get $10 off your first order on GOGO!`,
+                message: `Hey! Use my referral code ${referralCode} to get AED 10 off your first order on GOGO!`,
             });
         } catch (error) {
             console.error(error);
@@ -51,7 +51,7 @@ export default function ReferralScreen() {
                 <Animated.View entering={FadeInDown.delay(300)} style={styles.textContainer}>
                     <Text style={styles.title}>Invite Friends</Text>
                     <Text style={styles.subtitle}>
-                        Share your code with friends and get <Text style={styles.highlight}>$10.00</Text> when they make their first order!
+                        Share your code with friends and get <Text style={styles.highlight}>AED 10.00</Text> when they make their first order!
                     </Text>
                 </Animated.View>
 

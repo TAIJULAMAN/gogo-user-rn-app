@@ -215,7 +215,7 @@ export default function VehicleSelectionScreen() {
                                         <Text style={styles.vehicleDetails}>{vehicle.weight} • {vehicle.time}</Text>
                                     </View>
                                     <View style={styles.vehiclePriceContainer}>
-                                        <Text style={styles.currencySymbol}>$</Text>
+                                        <Text style={styles.currencySymbol}>AED</Text>
                                         <Text style={styles.vehiclePrice}>{vehicle.price}</Text>
                                     </View>
                                 </LinearGradient>

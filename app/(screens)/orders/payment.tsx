@@ -278,20 +278,20 @@ export default function PaymentScreen() {
             <View style={styles.summaryCard}>
               <View style={styles.summaryRow}>
                 <Text style={styles.summaryLabel}>Subtotal</Text>
-                <Text style={styles.summaryValue}>${subtotal}</Text>
+                <Text style={styles.summaryValue}>AED {subtotal}</Text>
               </View>
               <View style={styles.summaryRow}>
                 <Text style={styles.summaryLabel}>Service Fee</Text>
-                <Text style={styles.summaryValue}>${serviceFee}</Text>
+                <Text style={styles.summaryValue}>AED {serviceFee}</Text>
               </View>
               <View style={styles.summaryRow}>
                 <Text style={styles.summaryLabel}>Tax</Text>
-                <Text style={styles.summaryValue}>${tax}</Text>
+                <Text style={styles.summaryValue}>AED {tax}</Text>
               </View>
               <View style={styles.divider} />
               <View style={styles.summaryRow}>
                 <Text style={styles.totalLabel}>Total Amount</Text>
-                <Text style={styles.totalValue}>${totalAmount.toFixed(2)}</Text>
+                <Text style={styles.totalValue}>AED {totalAmount.toFixed(2)}</Text>
               </View>
             </View>
           </Animated.View>
@@ -311,7 +311,7 @@ export default function PaymentScreen() {
               ) : (
                 <>
                   <Text style={styles.payButtonText}>
-                    {selectedMethod === "cash" ? "Place Order" : `Pay $${totalAmount.toFixed(2)}`}
+                    {selectedMethod === "cash" ? "Place Order" : `Pay AED ${totalAmount.toFixed(2)}`}
                   </Text>
                   <Ionicons name={selectedMethod === "cash" ? "checkmark-circle-outline" : "arrow-forward"} size={24} color="#000" />
                 </>
@@ -324,7 +324,7 @@ export default function PaymentScreen() {
       <PaymentSuccessModal
         visible={showSuccessModal}
         onClose={handleCloseModal}
-        amount={`$${totalAmount.toFixed(2)}`}
+        amount={`AED ${totalAmount.toFixed(2)}`}
         isCash={selectedMethod === "cash"}
       />
 

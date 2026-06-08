@@ -25,7 +25,7 @@ export default function PaymentSuccessScreen() {
                 </View>
                 <View style={styles.detailRow}>
                     <Text style={styles.detailLabel}>Amount Paid</Text>
-                    <Text style={styles.detailValue}>$39.82</Text>
+                    <Text style={styles.detailValue}>AED 39.82</Text>
                 </View>
             </View>
 
