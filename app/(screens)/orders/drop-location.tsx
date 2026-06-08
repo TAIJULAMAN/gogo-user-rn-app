@@ -4,7 +4,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Image, ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import MapView, { Marker, PROVIDER_GOOGLE, type LatLng } from 'react-native-maps';
 import Animated, { FadeInDown, FadeInUp, Layout } from 'react-native-reanimated';
-import { useAppDispatch } from '../../../Redux/hooks';
+import { useAppDispatch, useAppSelector } from '../../../Redux/hooks';
 import { setDropoffLocation } from '../../../Redux/Slice/orderDraftSlice';
 import { CustomInput } from '../../../components/CustomInput';
 import { Colors } from '../../../constants/Colors';
@@ -42,9 +42,39 @@ export default function DropoffLocationScreen() {
     const [locationSuggestions, setLocationSuggestions] = useState<LocationSuggestion[]>([]);
     const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(false);
     const [selectedCoordinate, setSelectedCoordinate] = useState<LatLng>(DEFAULT_COORDINATE);
+    const draftDropoff = useAppSelector((state) => state.orderDraft.dropoff);
+
     const [details, setDetails] = useState('');
     const [personName, setPersonName] = useState('');
     const [phone, setPhone] = useState('');
+
+    const [addressError, setAddressError] = useState('');
+    const [nameError, setNameError] = useState('');
+    const [phoneError, setPhoneError] = useState('');
+
+    const hasLoadedDraft = useRef(false);
+    useEffect(() => {
+        if (draftDropoff && !hasLoadedDraft.current) {
+            if (draftDropoff.address) setSearchQuery(draftDropoff.address);
+            if (draftDropoff.details) setDetails(draftDropoff.details);
+            if (draftDropoff.personName) setPersonName(draftDropoff.personName);
+            if (draftDropoff.phone) setPhone(draftDropoff.phone);
+            if (draftDropoff.coordinate) {
+                setSelectedCoordinate(draftDropoff.coordinate);
+                setTimeout(() => {
+                    mapRef.current?.animateToRegion(
+                        {
+                            ...draftDropoff.coordinate!,
+                            latitudeDelta: 0.01,
+                            longitudeDelta: 0.01,
+                        },
+                        350
+                    );
+                }, 500);
+            }
+            hasLoadedDraft.current = true;
+        }
+    }, [draftDropoff]);
 
     useEffect(() => {
         const query = searchQuery.trim();
@@ -143,6 +173,24 @@ export default function DropoffLocationScreen() {
     };
 
     const handleContinue = () => {
+        let isValid = true;
+        if (!searchQuery.trim()) {
+            setAddressError('Dropoff address is required');
+            isValid = false;
+        }
+        if (!personName.trim()) {
+            setNameError('Contact name is required');
+            isValid = false;
+        }
+        if (!phone.trim()) {
+            setPhoneError('Phone number is required');
+            isValid = false;
+        }
+
+        if (!isValid) {
+            return;
+        }
+
         dispatch(setDropoffLocation({
             address: searchQuery,
             details,
@@ -238,8 +286,12 @@ export default function DropoffLocationScreen() {
                         onChangeText={(text) => {
                             setSearchQuery(text);
                             setShowDropdown(true);
+                            if (text.trim()) {
+                                setAddressError('');
+                            }
                         }}
                         onFocus={() => setShowDropdown(true)}
+                        error={addressError}
                         icon={<Ionicons name="search" size={20} color="#999" />}
                     />
                 </Animated.View>
@@ -341,18 +393,30 @@ export default function DropoffLocationScreen() {
                         />
 
                         <CustomInput
-                            label="Contact Person"
+                            label="Contact Person *"
                             placeholder="Name of the person"
                             value={personName}
-                            onChangeText={setPersonName}
+                            onChangeText={(text) => {
+                                setPersonName(text);
+                                if (text.trim()) {
+                                    setNameError('');
+                                }
+                            }}
+                            error={nameError}
                             icon={<Ionicons name="person-outline" size={20} color="#999" />}
                         />
 
                         <CustomInput
-                            label="Phone Number"
+                            label="Phone Number *"
                             placeholder="+971 XX XXX XXXX"
                             value={phone}
-                            onChangeText={setPhone}
+                            onChangeText={(text) => {
+                                setPhone(text);
+                                if (text.trim()) {
+                                    setPhoneError('');
+                                }
+                            }}
+                            error={phoneError}
                             keyboardType="phone-pad"
                             icon={<Ionicons name="call-outline" size={20} color="#999" />}
                         />

@@ -321,6 +321,7 @@ export default function PaymentScreen() {
         visible={showSuccessModal}
         onClose={handleCloseModal}
         amount={`$${totalAmount.toFixed(2)}`}
+        isCash={selectedMethod === "cash"}
       />
 
       <Modal

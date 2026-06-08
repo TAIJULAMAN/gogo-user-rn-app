@@ -178,7 +178,13 @@ export default function OrderDetailsScreen() {
                             <Ionicons name="person" size={32} color={Colors.primaryDark} />
                         </View>
                         <View style={styles.driverInfo}>
-                            <Text style={styles.driverName}>{order.rider?.name || order.driver?.name || 'Searching for driver...'}</Text>
+                            <Text style={styles.driverName}>
+                                {order.rider || order.driver
+                                    ? ((order.rider?.firstName || order.rider?.lastName)
+                                        ? `${order.rider?.firstName || ''} ${order.rider?.lastName || ''}`.trim()
+                                        : order.rider?.name || order.driver?.name || 'Your Driver')
+                                    : 'Searching for driver...'}
+                            </Text>
                             {(order.rider || order.driver) && (
                                 <View style={styles.ratingContainer}>
                                     <Ionicons name="star" size={14} color="#FFB800" />
@@ -244,7 +250,11 @@ export default function OrderDetailsScreen() {
                                 pathname: '/orders/rate-driver',
                                 params: { 
                                     orderId: order._id || order.id, 
-                                    driverName: order.rider?.name || order.driver?.name || 'Driver' 
+                                    driverName: order.rider
+                                        ? ((order.rider.firstName || order.rider.lastName)
+                                            ? `${order.rider.firstName || ''} ${order.rider.lastName || ''}`.trim()
+                                            : order.rider.name || 'Driver')
+                                        : 'Driver'
                                 }
                             })}
                         >

@@ -61,7 +61,7 @@ export default function HomeScreen() {
                         <View style={styles.userInfo}>
                             <View style={styles.avatarContainer}>
                                 <Image
-                                    source={require('../../assets/avatar.jpg')}
+                                    source={user?.profileImage ? { uri: user.profileImage } : require('../../assets/avatar.jpg')}
                                     style={styles.avatarImage}
                                     resizeMode="cover"
                                 />

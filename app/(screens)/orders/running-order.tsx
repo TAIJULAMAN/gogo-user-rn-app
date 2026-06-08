@@ -116,7 +116,9 @@ export default function RunningOrderScreen() {
         const phone = order?.rider?.phoneNumber || order?.driver?.phoneNumber;
         if (phone) {
             const formattedPhone = phone.replace(/\D/g, '');
-            Linking.openURL(`whatsapp://send?phone=${formattedPhone}`);
+            Linking.openURL(`https://wa.me/${formattedPhone}`).catch(() => {
+                Alert.alert("Error", "Failed to open WhatsApp. Please make sure WhatsApp is installed.");
+            });
         } else {
             Alert.alert("Error", "WhatsApp number not available");
         }
@@ -253,7 +255,11 @@ export default function RunningOrderScreen() {
                                         />
                                     </View>
                                     <View>
-                                        <Text style={styles.driverName}>{driver.name || 'Your Driver'}</Text>
+                                        <Text style={styles.driverName}>
+                                            {driver.firstName || driver.lastName
+                                                ? `${driver.firstName || ''} ${driver.lastName || ''}`.trim()
+                                                : driver.name || 'Your Driver'}
+                                        </Text>
                                         <Text style={styles.driverRole}>Delivery Partner • {driver.rating || '5.0'} ★</Text>
                                     </View>
                                 </View>

@@ -8,12 +8,14 @@ interface PaymentSuccessModalProps {
     visible: boolean;
     onClose: () => void;
     amount?: string;
+    isCash?: boolean;
 }
 
 export const PaymentSuccessModal: React.FC<PaymentSuccessModalProps> = ({
     visible,
     onClose,
-    amount = '$39.82'
+    amount = '$39.82',
+    isCash = false
 }) => {
     return (
         <Modal
@@ -40,7 +42,7 @@ export const PaymentSuccessModal: React.FC<PaymentSuccessModalProps> = ({
                         entering={FadeInDown.delay(400).duration(600)}
                         style={styles.title}
                     >
-                        Payment Successful!
+                        {isCash ? 'Order Confirmed!' : 'Payment Successful!'}
                     </Animated.Text>
 
                     <Animated.Text
@@ -54,7 +56,7 @@ export const PaymentSuccessModal: React.FC<PaymentSuccessModalProps> = ({
                         entering={FadeInDown.delay(600).duration(600)}
                         style={styles.amountContainer}
                     >
-                        <Text style={styles.amountLabel}>Amount Paid</Text>
+                        <Text style={styles.amountLabel}>{isCash ? 'Amount to Pay' : 'Amount Paid'}</Text>
                         <Text style={styles.amountValue}>{amount}</Text>
                     </Animated.View>
 

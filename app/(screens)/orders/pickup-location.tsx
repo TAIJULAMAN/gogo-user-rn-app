@@ -21,7 +21,7 @@ import Animated, {
   FadeInUp,
   Layout,
 } from "react-native-reanimated";
-import { useAppDispatch } from "../../../Redux/hooks";
+import { useAppDispatch, useAppSelector } from "../../../Redux/hooks";
 import { setPickupLocation } from "../../../Redux/Slice/orderDraftSlice";
 import { CustomInput } from "../../../components/CustomInput";
 import { Colors } from "../../../constants/Colors";
@@ -62,9 +62,39 @@ export default function PickupLocationScreen() {
   const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(false);
   const [selectedCoordinate, setSelectedCoordinate] =
     useState<LatLng>(DEFAULT_COORDINATE);
+  const draftPickup = useAppSelector((state) => state.orderDraft.pickup);
+
   const [details, setDetails] = useState("");
   const [personName, setPersonName] = useState("");
   const [phone, setPhone] = useState("");
+
+  const [addressError, setAddressError] = useState("");
+  const [nameError, setNameError] = useState("");
+  const [phoneError, setPhoneError] = useState("");
+
+  const hasLoadedDraft = useRef(false);
+  useEffect(() => {
+    if (draftPickup && !hasLoadedDraft.current) {
+      if (draftPickup.address) setSearchQuery(draftPickup.address);
+      if (draftPickup.details) setDetails(draftPickup.details);
+      if (draftPickup.personName) setPersonName(draftPickup.personName);
+      if (draftPickup.phone) setPhone(draftPickup.phone);
+      if (draftPickup.coordinate) {
+        setSelectedCoordinate(draftPickup.coordinate);
+        setTimeout(() => {
+          mapRef.current?.animateToRegion(
+            {
+              ...draftPickup.coordinate!,
+              latitudeDelta: 0.01,
+              longitudeDelta: 0.01,
+            },
+            350
+          );
+        }, 500);
+      }
+      hasLoadedDraft.current = true;
+    }
+  }, [draftPickup]);
 
   useEffect(() => {
     const query = searchQuery.trim();
@@ -167,6 +197,24 @@ export default function PickupLocationScreen() {
   };
 
   const handleContinue = () => {
+    let isValid = true;
+    if (!searchQuery.trim()) {
+      setAddressError("Pickup address is required");
+      isValid = false;
+    }
+    if (!personName.trim()) {
+      setNameError("Contact name is required");
+      isValid = false;
+    }
+    if (!phone.trim()) {
+      setPhoneError("Phone number is required");
+      isValid = false;
+    }
+
+    if (!isValid) {
+      return;
+    }
+
     dispatch(
       setPickupLocation({
         address: searchQuery,
@@ -277,8 +325,12 @@ export default function PickupLocationScreen() {
             onChangeText={(text) => {
               setSearchQuery(text);
               setShowDropdown(true);
+              if (text.trim()) {
+                setAddressError("");
+              }
             }}
             onFocus={() => setShowDropdown(true)}
+            error={addressError}
             icon={<Ionicons name="search" size={20} color="#999" />}
           />
         </Animated.View>
@@ -402,18 +454,30 @@ export default function PickupLocationScreen() {
             />
 
             <CustomInput
-              label="Contact Person"
+              label="Contact Person *"
               placeholder="Name of the person"
               value={personName}
-              onChangeText={setPersonName}
+              onChangeText={(text) => {
+                setPersonName(text);
+                if (text.trim()) {
+                  setNameError("");
+                }
+              }}
+              error={nameError}
               icon={<Ionicons name="person-outline" size={20} color="#999" />}
             />
 
             <CustomInput
-              label="Phone Number"
+              label="Phone Number *"
               placeholder="+971 XX XXX XXXX"
               value={phone}
-              onChangeText={setPhone}
+              onChangeText={(text) => {
+                setPhone(text);
+                if (text.trim()) {
+                  setPhoneError("");
+                }
+              }}
+              error={phoneError}
               keyboardType="phone-pad"
               icon={<Ionicons name="call-outline" size={20} color="#999" />}
             />

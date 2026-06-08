@@ -74,6 +74,40 @@ export default function CreateOrderScreen() {
         );
     };
 
+    const handleContinue = () => {
+        if (!draftPickup?.address) {
+            Alert.alert("Pickup Required", "Please select a pickup location.");
+            return;
+        }
+        if (!draftPickup?.personName?.trim() || !draftPickup?.phone?.trim()) {
+            Alert.alert(
+                "Pickup Contact Required", 
+                "Please provide contact person name and phone number for the pickup location.",
+                [
+                    { text: "Go to Pickup", onPress: () => router.push('/orders/pickup-location') },
+                    { text: "Cancel", style: "cancel" }
+                ]
+            );
+            return;
+        }
+        if (!draftDropoff?.address) {
+            Alert.alert("Dropoff Required", "Please select a dropoff location.");
+            return;
+        }
+        if (!draftDropoff?.personName?.trim() || !draftDropoff?.phone?.trim()) {
+            Alert.alert(
+                "Dropoff Contact Required", 
+                "Please provide contact person name and phone number for the dropoff location.",
+                [
+                    { text: "Go to Dropoff", onPress: () => router.push('/orders/drop-location') },
+                    { text: "Cancel", style: "cancel" }
+                ]
+            );
+            return;
+        }
+        router.push('/orders/vehicle-selection');
+    };
+
     const renderSavedAddresses = () => {
         if (isLoadingAddresses) {
             return <ActivityIndicator size="small" color={Colors.primaryDark} style={{ marginVertical: 20 }} />;
@@ -293,7 +327,7 @@ export default function CreateOrderScreen() {
                     <TouchableOpacity
                         style={styles.continueButton}
                         activeOpacity={0.8}
-                        onPress={() => router.push('/orders/vehicle-selection')}
+                        onPress={handleContinue}
                     >
                         <Text style={styles.continueButtonText}>Continue to Vehicle</Text>
                         <Ionicons name="arrow-forward" size={24} color="#000" />
