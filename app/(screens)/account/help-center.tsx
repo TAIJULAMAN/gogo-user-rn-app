@@ -1,51 +1,20 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Stack, useRouter } from 'expo-router';
 import React, { useState } from 'react';
-import { ScrollView, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ScrollView, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View, ActivityIndicator } from 'react-native';
 import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
 import { Colors } from '../../../constants/Colors';
-
-const FAQ_DATA = [
-    {
-        question: 'How do I track my order?',
-        answer: 'You can track your order in real-time from the Orders tab. Simply tap on your active order to see the live location of your delivery partner.',
-    },
-    {
-        question: 'What are the delivery charges?',
-        answer: 'Delivery charges vary based on distance and vehicle type. You can see the exact cost before confirming your order.',
-    },
-    {
-        question: 'How can I cancel my order?',
-        answer: 'You can cancel your order within 5 minutes of placement for a full refund. Go to Orders, select your order, and tap Cancel.',
-    },
-    {
-        question: 'What payment methods do you accept?',
-        answer: 'We accept credit cards, debit cards, Apple Pay, Google Pay, and cash on delivery for select orders.',
-    },
-    {
-        question: 'How do I add a new delivery address?',
-        answer: 'When creating an order, tap on the location field and either enter a new address or select from your saved locations.',
-    },
-    {
-        question: 'Can I schedule a delivery for later?',
-        answer: 'Yes! When creating an order, you can choose to schedule it for a specific date and time that works for you.',
-    },
-    {
-        question: 'What if my item is damaged?',
-        answer: 'If your item arrives damaged, please contact our support team immediately through the app. We\'ll investigate and provide a resolution.',
-    },
-    {
-        question: 'How do I become a delivery partner?',
-        answer: 'Visit our website at www.gogo.ae/partner to learn more about becoming a delivery partner and submit your application.',
-    },
-];
+import { useGetCommonContentQuery } from '../../../Redux/api/commonApi';
 
 export default function HelpCenterScreen() {
     const router = useRouter();
     const [searchQuery, setSearchQuery] = useState('');
     const [expandedIndex, setExpandedIndex] = useState<number | null>(null);
+    const { data: commonData, isLoading } = useGetCommonContentQuery(undefined);
 
-    const filteredFAQs = FAQ_DATA.filter(faq =>
+    const faqs = commonData?.data?.faqs || [];
+
+    const filteredFAQs = faqs.filter((faq: any) =>
         faq.question.toLowerCase().includes(searchQuery.toLowerCase()) ||
         faq.answer.toLowerCase().includes(searchQuery.toLowerCase())
     );
@@ -106,14 +75,19 @@ export default function HelpCenterScreen() {
                     {/* FAQs */}
                     <Text style={styles.sectionTitle}>Frequently Asked Questions</Text>
 
-                    {filteredFAQs.length === 0 ? (
+                    {isLoading ? (
+                        <View style={{ paddingVertical: 40, alignItems: 'center' }}>
+                            <ActivityIndicator size="large" color={Colors.primaryDark} />
+                            <Text style={{ marginTop: 10, color: '#999' }}>Loading FAQs...</Text>
+                        </View>
+                    ) : filteredFAQs.length === 0 ? (
                         <View style={styles.emptyState}>
                             <Ionicons name="search-outline" size={48} color="#ccc" />
                             <Text style={styles.emptyText}>No results found</Text>
                             <Text style={styles.emptySubtext}>Try a different search term</Text>
                         </View>
                     ) : (
-                        filteredFAQs.map((faq, index) => (
+                        filteredFAQs.map((faq: any, index: number) => (
                             <Animated.View
                                 key={index}
                                 entering={FadeInDown.delay(300 + index * 50).duration(600)}

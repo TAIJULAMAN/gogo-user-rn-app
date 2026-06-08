@@ -86,7 +86,7 @@ export default function ContactUsScreen() {
                             </View>
                             <View style={styles.contactInfo}>
                                 <Text style={styles.contactLabel}>Phone</Text>
-                                <Text style={styles.contactValue}>+971 50 123 4567</Text>
+                                <Text style={styles.contactValue}>{contactPhone}</Text>
                             </View>
                             <Ionicons name="chevron-forward" size={20} color="#999" />
                         </TouchableOpacity>
@@ -97,7 +97,7 @@ export default function ContactUsScreen() {
                             </View>
                             <View style={styles.contactInfo}>
                                 <Text style={styles.contactLabel}>Email</Text>
-                                <Text style={styles.contactValue}>support@gogo.ae</Text>
+                                <Text style={styles.contactValue}>{contactEmail}</Text>
                             </View>
                             <Ionicons name="chevron-forward" size={20} color="#999" />
                         </TouchableOpacity>
