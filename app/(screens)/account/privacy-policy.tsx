@@ -1,8 +1,9 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React from 'react';
-import { ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Animated, { FadeInUp } from 'react-native-reanimated';
+import { WebView } from 'react-native-webview';
 import { useGetCommonContentQuery } from '../../../Redux/api/commonApi';
 import { Colors } from '../../../constants/Colors';
 
@@ -26,19 +27,56 @@ export default function PrivacyPolicyScreen() {
                 <View style={{ width: 24 }} />
             </Animated.View>
 
-            <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-                <Text style={styles.lastUpdated}>
-                    {isLoading ? 'Loading latest privacy policy...' : 'Latest privacy policy from GOGO'}
-                </Text>
-
-                <View style={styles.section}>
-                    <Text style={styles.paragraph}>
-                        {privacyPolicy || (isLoading ? '' : 'Privacy policy is not available right now.')}
-                    </Text>
+            {isLoading ? (
+                <View style={styles.centered}>
+                    <ActivityIndicator size="large" color={Colors.primaryDark} />
+                    <Text style={styles.loadingText}>Loading latest privacy policy...</Text>
                 </View>
-
-                <View style={{ height: 40 }} />
-            </ScrollView>
+            ) : privacyPolicy ? (
+                <WebView
+                    originWhitelist={['*']}
+                    source={{
+                        html: `
+                            <html>
+                            <head>
+                                <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+                                <style>
+                                    body {
+                                        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+                                        color: #4a5568;
+                                        line-height: 1.6;
+                                        font-size: 15px;
+                                        padding: 24px;
+                                        margin: 0;
+                                        background-color: #fff;
+                                    }
+                                    h1, h2, h3, h4, h5, h6 {
+                                        color: #1a202c;
+                                        margin-top: 24px;
+                                        margin-bottom: 12px;
+                                        font-weight: 700;
+                                    }
+                                    h1 { font-size: 22px; }
+                                    h2 { font-size: 18px; border-bottom: 1px solid #edf2f7; padding-bottom: 8px; }
+                                    p { margin-bottom: 16px; }
+                                    ul, ol { padding-left: 20px; margin-bottom: 16px; }
+                                    li { margin-bottom: 8px; }
+                                </style>
+                            </head>
+                            <body>
+                                ${privacyPolicy}
+                            </body>
+                            </html>
+                        `
+                    }}
+                    style={styles.webview}
+                    showsVerticalScrollIndicator={false}
+                />
+            ) : (
+                <View style={styles.centered}>
+                    <Text style={styles.errorText}>Privacy policy is not available right now.</Text>
+                </View>
+            )}
         </View>
     );
 }
@@ -67,20 +105,23 @@ const styles = StyleSheet.create({
         fontWeight: '700',
         color: Colors.text,
     },
-    content: {
-        padding: 24,
+    centered: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        padding: 20,
     },
-    lastUpdated: {
+    loadingText: {
+        marginTop: 12,
         fontSize: 14,
-        color: '#999',
-        marginBottom: 24,
-    },
-    section: {
-        marginBottom: 32,
-    },
-    paragraph: {
-        fontSize: 15,
-        lineHeight: 24,
         color: '#666',
+    },
+    errorText: {
+        fontSize: 15,
+        color: '#666',
+        textAlign: 'center',
+    },
+    webview: {
+        flex: 1,
     },
 });

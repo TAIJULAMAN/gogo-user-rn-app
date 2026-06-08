@@ -1,18 +1,110 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useState } from 'react';
-import { Image, ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Alert, Image, ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Animated, { FadeInDown, FadeInUp, Layout, SlideInRight } from 'react-native-reanimated';
 import { Colors } from '../../../constants/Colors';
+import { useAppDispatch, useAppSelector } from '../../../Redux/hooks';
+import { setPickupLocation, setDropoffLocation } from '../../../Redux/Slice/orderDraftSlice';
+import { useGetSavedAddressesQuery } from '../../../Redux/api/userApi';
 
 const STEPS = ['Locations', 'Vehicle', 'Checkout', 'Payment'];
 
 export default function CreateOrderScreen() {
     const router = useRouter();
     const params = useLocalSearchParams();
-    const [pickup, setPickup] = useState('');
-    const [dropoff, setDropoff] = useState('');
+    const dispatch = useAppDispatch();
+    
+    // Get locations from Redux
+    const draftPickup = useAppSelector((state) => state.orderDraft.pickup);
+    const draftDropoff = useAppSelector((state) => state.orderDraft.dropoff);
+
+    const pickup = draftPickup?.address || '';
+    const dropoff = draftDropoff?.address || '';
+
     const [currentStep, setCurrentStep] = useState(0);
+
+    // Fetch saved addresses from API
+    const { data: savedAddressesData, isLoading: isLoadingAddresses } = useGetSavedAddressesQuery(undefined);
+    const savedAddresses = savedAddressesData?.data ?? [];
+
+    const getAddressIcon = (addressLabel?: string) => {
+        const normalized = addressLabel?.toLowerCase() || '';
+        if (normalized.includes('home')) return 'home';
+        if (normalized.includes('office') || normalized.includes('work') || normalized.includes('job')) return 'briefcase';
+        if (normalized.includes('gym') || normalized.includes('fitness') || normalized.includes('workout')) return 'fitness';
+        if (normalized.includes('friend') || normalized.includes('love') || normalized.includes('heart')) return 'heart';
+        return 'location';
+    };
+
+    const handleSelectSavedAddress = (address: string) => {
+        Alert.alert(
+            "Use Saved Location",
+            "Where would you like to set this address?",
+            [
+                {
+                    text: "Set as Pickup",
+                    onPress: () => {
+                        dispatch(setPickupLocation({
+                            address,
+                            details: '',
+                            personName: '',
+                            phone: '',
+                            coordinate: null
+                        }));
+                    }
+                },
+                {
+                    text: "Set as Dropoff",
+                    onPress: () => {
+                        dispatch(setDropoffLocation({
+                            address,
+                            details: '',
+                            personName: '',
+                            phone: '',
+                            coordinate: null
+                        }));
+                    }
+                },
+                {
+                    text: "Cancel",
+                    style: "cancel"
+                }
+            ]
+        );
+    };
+
+    const renderSavedAddresses = () => {
+        if (isLoadingAddresses) {
+            return <ActivityIndicator size="small" color={Colors.primaryDark} style={{ marginVertical: 20 }} />;
+        }
+
+        if (savedAddresses.length === 0) {
+            return (
+                <TouchableOpacity 
+                    style={styles.emptySavedCard}
+                    onPress={() => router.push('/account/address-book')}
+                >
+                    <Ionicons name="add-circle-outline" size={24} color="#999" />
+                    <Text style={styles.emptySavedText}>Add Saved Address</Text>
+                </TouchableOpacity>
+            );
+        }
+
+        return savedAddresses.map((item: any, index: number) => (
+            <TouchableOpacity 
+                key={item._id || index} 
+                style={styles.savedCard}
+                onPress={() => handleSelectSavedAddress(item.addressLine)}
+            >
+                <View style={styles.savedIconContainer}>
+                    <Ionicons name={getAddressIcon(item.label) as any} size={22} color={Colors.primaryDark} />
+                </View>
+                <Text style={styles.savedName} numberOfLines={1}>{item.label || 'Saved'}</Text>
+                <Text style={styles.savedAddress} numberOfLines={1}>{item.addressLine}</Text>
+            </TouchableOpacity>
+        ));
+    };
 
     const renderStepper = () => (
         <View style={styles.stepperContainer}>
@@ -162,20 +254,7 @@ export default function CreateOrderScreen() {
                     >
                         <Text style={styles.sectionTitle}>Saved Locations</Text>
                         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.hScroll}>
-                            {[
-                                { name: 'Home', address: 'JVC, Dubai', icon: 'home' },
-                                { name: 'Office', address: 'Business Bay', icon: 'briefcase' },
-                                { name: 'Gym', address: 'Sports City', icon: 'fitness' },
-                                { name: 'Friend', address: 'Meadows', icon: 'heart' },
-                            ].map((item, index) => (
-                                <TouchableOpacity key={index} style={styles.savedCard}>
-                                    <View style={styles.savedIconContainer}>
-                                        <Ionicons name={item.icon as any} size={22} color={Colors.primaryDark} />
-                                    </View>
-                                    <Text style={styles.savedName}>{item.name}</Text>
-                                    <Text style={styles.savedAddress}>{item.address}</Text>
-                                </TouchableOpacity>
-                            ))}
+                            {renderSavedAddresses()}
                         </ScrollView>
                     </Animated.View>
 
@@ -532,5 +611,25 @@ const styles = StyleSheet.create({
         fontSize: 16,
         fontWeight: '800',
         color: '#000',
+    },
+    emptySavedCard: {
+        width: 140,
+        height: 100,
+        backgroundColor: '#F9F9F9',
+        borderRadius: 16,
+        padding: 12,
+        justifyContent: 'center',
+        alignItems: 'center',
+        borderWidth: 1,
+        borderColor: '#E0E0E0',
+        borderStyle: 'dashed',
+        marginRight: 4,
+    },
+    emptySavedText: {
+        fontSize: 12,
+        color: '#666',
+        fontWeight: '600',
+        marginTop: 8,
+        textAlign: 'center',
     },
 });

@@ -23,7 +23,7 @@ export default function VerifyOTPScreen() {
   const { phone } = useLocalSearchParams();
   const phoneNumber = Array.isArray(phone) ? phone[0] : phone;
   const dispatch = useAppDispatch();
-  const [otp, setOtp] = useState(["", "", "", "", "", ""]);
+  const [otp, setOtp] = useState(["", "", "", ""]);
   const [loading, setLoading] = useState(false);
   const [verifyUserPhone] = useVerifyUserPhoneMutation();
   const inputRefs = useRef<(TextInput | null)[]>([]);
@@ -34,7 +34,7 @@ export default function VerifyOTPScreen() {
     setOtp(newOtp);
 
     // Auto-focus next input
-    if (value && index < 5) {
+    if (value && index < 3) {
       inputRefs.current[index + 1]?.focus();
     }
   };
@@ -47,8 +47,8 @@ export default function VerifyOTPScreen() {
 
   const handleVerify = async () => {
     const otpCode = otp.join("");
-    if (otpCode.length < 6) {
-      Alert.alert("Error", "Please enter a 6-digit OTP");
+    if (otpCode.length < 4) {
+      Alert.alert("Error", "Please enter a 4-digit OTP");
       return;
     }
 
@@ -128,7 +128,7 @@ export default function VerifyOTPScreen() {
       <View style={styles.header}>
         <Text style={styles.title}>Verify Code</Text>
         <Text style={styles.subtitle}>
-          Please enter the 6-digit code sent to your email
+          Please enter the 4-digit code sent to your phone
         </Text>
       </View>
 

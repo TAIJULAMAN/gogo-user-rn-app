@@ -10,6 +10,7 @@ export const Colors = {
     secondary: '#000000',
     backgroundAlt: '#f8f9fa',
     border: '#e5e5e5',
+    warning: '#ef4444',
 };
 
 

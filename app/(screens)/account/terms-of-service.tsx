@@ -1,15 +1,16 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Stack, useRouter } from 'expo-router';
 import React from 'react';
-import { ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
+import { ActivityIndicator, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import Animated, { FadeInUp } from 'react-native-reanimated';
+import { WebView } from 'react-native-webview';
 import { useGetCommonContentQuery } from '../../../Redux/api/commonApi';
 import { Colors } from '../../../constants/Colors';
 
 export default function TermsOfServiceScreen() {
     const router = useRouter();
     const { data, isLoading } = useGetCommonContentQuery(undefined);
-    const terms = data?.data?.termsOfService?.trim();
+    const terms = (data?.data?.termsAndConditions || data?.data?.termsOfService || '')?.trim();
 
     return (
         <View style={styles.container}>
@@ -27,19 +28,56 @@ export default function TermsOfServiceScreen() {
                 <View style={{ width: 24 }} />
             </Animated.View>
 
-            <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-                <Animated.View entering={FadeInDown.delay(200).duration(600)}>
-                    <Text style={styles.lastUpdated}>
-                        {isLoading ? 'Loading latest terms...' : 'Latest terms from GOGO'}
-                    </Text>
-                    <View style={styles.section}>
-                        <Text style={styles.paragraph}>
-                            {terms || (isLoading ? '' : 'Terms are not available right now.')}
-                        </Text>
-                    </View>
-                    <View style={{ height: 40 }} />
-                </Animated.View>
-            </ScrollView>
+            {isLoading ? (
+                <View style={styles.centered}>
+                    <ActivityIndicator size="large" color={Colors.primaryDark} />
+                    <Text style={styles.loadingText}>Loading latest terms...</Text>
+                </View>
+            ) : terms ? (
+                <WebView
+                    originWhitelist={['*']}
+                    source={{
+                        html: `
+                            <html>
+                            <head>
+                                <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+                                <style>
+                                    body {
+                                        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+                                        color: #4a5568;
+                                        line-height: 1.6;
+                                        font-size: 15px;
+                                        padding: 24px;
+                                        margin: 0;
+                                        background-color: #fff;
+                                    }
+                                    h1, h2, h3, h4, h5, h6 {
+                                        color: #1a202c;
+                                        margin-top: 24px;
+                                        margin-bottom: 12px;
+                                        font-weight: 700;
+                                    }
+                                    h1 { font-size: 22px; }
+                                    h2 { font-size: 18px; border-bottom: 1px solid #edf2f7; padding-bottom: 8px; }
+                                    p { margin-bottom: 16px; }
+                                    ul, ol { padding-left: 20px; margin-bottom: 16px; }
+                                    li { margin-bottom: 8px; }
+                                </style>
+                            </head>
+                            <body>
+                                ${terms}
+                            </body>
+                            </html>
+                        `
+                    }}
+                    style={styles.webview}
+                    showsVerticalScrollIndicator={false}
+                />
+            ) : (
+                <View style={styles.centered}>
+                    <Text style={styles.errorText}>Terms of Service are not available right now.</Text>
+                </View>
+            )}
         </View>
     );
 }
@@ -47,7 +85,7 @@ export default function TermsOfServiceScreen() {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#f8f9fa',
+        backgroundColor: '#fff',
     },
     header: {
         flexDirection: 'row',
@@ -61,31 +99,30 @@ const styles = StyleSheet.create({
         borderBottomColor: '#F0F0F0',
     },
     backButton: {
-        padding: 4,
+        padding: 8,
     },
     headerTitle: {
         fontSize: 18,
         fontWeight: '700',
         color: Colors.text,
     },
-    content: {
+    centered: {
         flex: 1,
-        paddingHorizontal: 20,
+        justifyContent: 'center',
+        alignItems: 'center',
+        padding: 20,
     },
-    lastUpdated: {
-        fontSize: 13,
-        color: '#999',
-        marginTop: 20,
-        marginBottom: 16,
-        fontStyle: 'italic',
-    },
-    section: {
-        marginBottom: 24,
-    },
-    paragraph: {
+    loadingText: {
+        marginTop: 12,
         fontSize: 14,
-        lineHeight: 22,
         color: '#666',
-        marginBottom: 12,
+    },
+    errorText: {
+        fontSize: 15,
+        color: '#666',
+        textAlign: 'center',
+    },
+    webview: {
+        flex: 1,
     },
 });

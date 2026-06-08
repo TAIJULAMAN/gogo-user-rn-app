@@ -5,12 +5,12 @@ import { Alert, Linking, ScrollView, StatusBar, StyleSheet, Text, TextInput, Tou
 import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
 import { Colors } from '../../../constants/Colors';
 import { useGetCommonContentQuery, useCreateReportMutation } from '../../../Redux/api/commonApi';
-import { useGetUserProfileQuery } from '../../../Redux/api/userApi';
+import { useGetMyProfileQuery } from '../../../Redux/api/userApi';
 
 export default function ContactUsScreen() {
     const router = useRouter();
     const { data: contentData } = useGetCommonContentQuery(undefined);
-    const { data: profileData } = useGetUserProfileQuery(undefined);
+    const { data: profileData } = useGetMyProfileQuery(undefined);
     const [createReport, { isLoading: isSubmitting }] = useCreateReportMutation();
 
     const [subject, setSubject] = useState('');
