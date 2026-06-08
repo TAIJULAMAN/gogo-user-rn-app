@@ -250,7 +250,7 @@ export default function RunningOrderScreen() {
                                 <View style={styles.driverInfo}>
                                     <View style={styles.avatarContainer}>
                                         <Image
-                                            source={{ uri: driver.avatar || 'https://i.pravatar.cc/150?u=driver' }}
+                                            source={{ uri: driver.profileImage || 'https://i.pravatar.cc/150?u=driver' }}
                                             style={styles.avatar}
                                         />
                                     </View>

@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useState } from 'react';
-import { Alert, ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View, ActivityIndicator } from 'react-native';
+import { Alert, ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View, ActivityIndicator, Image } from 'react-native';
 import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
 import CancelOrderModal from '../../../components/CancelOrderModal';
 import InvoiceModal from '../../../components/InvoiceModal';
@@ -96,6 +96,7 @@ export default function OrderDetailsScreen() {
 
     const statusConfig = getStatusConfig(order.status);
     const orderDisplayId = (order._id || order.id || "").slice(-8).toUpperCase();
+    const driver = order.rider || order.driver;
 
     return (
         <View style={styles.container}>
@@ -175,7 +176,11 @@ export default function OrderDetailsScreen() {
 
                     <View style={styles.driverContainer}>
                         <View style={styles.driverAvatar}>
-                            <Ionicons name="person" size={32} color={Colors.primaryDark} />
+                            {driver?.profileImage ? (
+                                <Image source={{ uri: driver.profileImage }} style={styles.avatarImage} />
+                            ) : (
+                                <Ionicons name="person" size={32} color={Colors.primaryDark} />
+                            )}
                         </View>
                         <View style={styles.driverInfo}>
                             <Text style={styles.driverName}>
@@ -420,6 +425,11 @@ const styles = StyleSheet.create({
         backgroundColor: '#F0FFF0',
         alignItems: 'center',
         justifyContent: 'center',
+        overflow: 'hidden',
+    },
+    avatarImage: {
+        width: '100%',
+        height: '100%',
     },
     driverInfo: {
         flex: 1,
