@@ -25,6 +25,8 @@ import {
   useInitiatePaymentMutation,
   useVerifyPaymentMutation,
 } from "../../../Redux/api/paymentApi";
+import { useAppDispatch } from "../../../Redux/hooks";
+import { resetOrderDraft } from "../../../Redux/Slice/orderDraftSlice";
 
 const STEPS = ["Locations", "Vehicle", "Checkout", "Payment"];
 
@@ -35,6 +37,7 @@ const PAYMENT_METHODS = [
 
 export default function PaymentScreen() {
   const router = useRouter();
+  const dispatch = useAppDispatch();
   const params = useLocalSearchParams<{ orderPayload: string; amount: string }>();
   const orderPayloadRaw = params.orderPayload;
   const amount = params.amount;
@@ -129,6 +132,7 @@ export default function PaymentScreen() {
   };
 
   const handleCloseModal = () => {
+    dispatch(resetOrderDraft());
     setShowSuccessModal(false);
     router.dismissAll()
     if (createdOrderId) {
