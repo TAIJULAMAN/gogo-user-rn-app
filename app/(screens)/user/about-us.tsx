@@ -10,7 +10,7 @@ export default function AboutUsScreen() {
     const router = useRouter();
     const { data: contentData } = useGetCommonContentQuery(undefined);
     
-    const aboutText = contentData?.data?.aboutUs || "At GOGO, we're on a mission to revolutionize delivery services across the UAE. We believe in making deliveries fast, reliable, and accessible to everyone.";
+    const aboutText = contentData?.data?.about || contentData?.data?.aboutUs || "At GOGO, we're on a mission to revolutionize delivery services across the UAE. We believe in making deliveries fast, reliable, and accessible to everyone.";
     const contactEmail = contentData?.data?.contactUs?.email || 'info@gogo.ae';
     const contactPhone = contentData?.data?.contactUs?.phone || '+971 50 123 4567';
 
