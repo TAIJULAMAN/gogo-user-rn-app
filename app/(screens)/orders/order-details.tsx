@@ -113,16 +113,13 @@ export default function OrderDetailsScreen() {
             <StatusBar barStyle="dark-content" />
 
             {/* Header */}
-            <Animated.View
-                entering={FadeInUp.delay(100).duration(600)}
-                style={styles.header}
-            >
+            <View style={styles.header}>
                 <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
                     <Ionicons name="arrow-back" size={24} color="#000" />
                 </TouchableOpacity>
                 <Text style={styles.headerTitle}>Order Details</Text>
                 <View style={{ width: 24 }} />
-            </Animated.View>
+            </View>
 
             <ScrollView
                 showsVerticalScrollIndicator={false}
@@ -130,10 +127,7 @@ export default function OrderDetailsScreen() {
                 removeClippedSubviews={false}
             >
                 {/* Status Card */}
-                <Animated.View
-                    entering={FadeInDown.delay(200).duration(600)}
-                    style={styles.statusCard}
-                >
+                <View style={styles.statusCard}>
                     <View style={[styles.statusBadge, { backgroundColor: statusConfig.bg }]}>
                         <Ionicons name={statusConfig.icon} size={24} color={statusConfig.text} />
                         <Text style={[styles.statusText, { color: statusConfig.text }]}>
@@ -142,13 +136,10 @@ export default function OrderDetailsScreen() {
                     </View>
                     <Text style={styles.orderId}>#{orderDisplayId}</Text>
                     <Text style={styles.orderDate}>{new Date(order.createdAt).toLocaleDateString()} at {new Date(order.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</Text>
-                </Animated.View>
+                </View>
 
                 {/* Locations */}
-                <Animated.View
-                    entering={FadeInDown.delay(300).duration(600)}
-                    style={styles.card}
-                >
+                <View style={styles.card}>
                     <Text style={styles.cardTitle}>Delivery Route</Text>
 
                     <View style={styles.locationContainer}>
@@ -176,13 +167,10 @@ export default function OrderDetailsScreen() {
                             </View>
                         </View>
                     </View>
-                </Animated.View>
+                </View>
 
                 {/* Driver Info */}
-                <Animated.View
-                    entering={FadeInDown.delay(400).duration(600)}
-                    style={styles.card}
-                >
+                <View style={styles.card}>
                     <Text style={styles.cardTitle}>Driver Information</Text>
 
                     <View style={styles.driverContainer}>
@@ -214,15 +202,11 @@ export default function OrderDetailsScreen() {
                             </TouchableOpacity>
                         ) : null}
                     </View>
-                </Animated.View>
+                </View>
 
                 {/* Delivery Proof */}
                 {order.completionProof ? (
-                    <Animated.View
-                        key="delivery-proof-card"
-                        entering={FadeInDown.delay(500).duration(600)}
-                        style={styles.card}
-                    >
+                    <View key="delivery-proof-card" style={styles.card}>
                         <Text style={styles.cardTitle}>Delivery Proof</Text>
                         <TouchableOpacity 
                             activeOpacity={0.9} 
@@ -238,14 +222,11 @@ export default function OrderDetailsScreen() {
                                 <Ionicons name="expand" size={16} color="#fff" />
                             </View>
                         </TouchableOpacity>
-                    </Animated.View>
+                    </View>
                 ) : null}
 
                 {/* Price Breakdown */}
-                <Animated.View
-                    entering={FadeInDown.delay(600).duration(600)}
-                    style={styles.card}
-                >
+                <View style={styles.card}>
                     <Text style={styles.cardTitle}>Price Breakdown</Text>
 
                     <View style={styles.breakdownRow}>
@@ -269,13 +250,10 @@ export default function OrderDetailsScreen() {
                         <Text style={styles.totalLabel}>Total Amount</Text>
                         <Text style={styles.totalAmount}>AED {Number(order.price).toFixed(2)}</Text>
                     </View>
-                </Animated.View>
+                </View>
 
                 {/* Actions */}
-                <Animated.View
-                    entering={FadeInDown.delay(700).duration(600)}
-                    style={styles.actionsContainer}
-                >
+                <View style={styles.actionsContainer}>
                     <TouchableOpacity
                         key="view-receipt-action"
                         style={styles.actionButton}
@@ -330,7 +308,7 @@ export default function OrderDetailsScreen() {
                             </Text>
                         </TouchableOpacity>
                     ) : null}
-                </Animated.View>
+                </View>
             </ScrollView>
 
             <InvoiceModal

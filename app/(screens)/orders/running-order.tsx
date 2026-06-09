@@ -221,18 +221,15 @@ export default function RunningOrderScreen() {
             </View>
 
             {/* Header - Close Button */}
-            <Animated.View entering={FadeInUp.delay(200)} style={styles.header}>
+            <View style={styles.header}>
                 <TouchableOpacity onPress={() => router.back()} style={styles.closeButton}>
                     <Ionicons name="arrow-back" size={24} color="#000" />
                 </TouchableOpacity>
-            </Animated.View>
+            </View>
 
             {/* Bottom Content Layer */}
             <View style={styles.bottomContainer}>
-                <Animated.View
-                    entering={FadeInDown.delay(300).springify().damping(15)}
-                    style={styles.cardContainer}
-                >
+                <View style={styles.cardContainer}>
                     <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 20 }} removeClippedSubviews={false}>
 
                         {/* Arrival Estimate Card */}
@@ -322,7 +319,7 @@ export default function RunningOrderScreen() {
                         </View>
 
                     </ScrollView>
-                </Animated.View>
+                </View>
 
                 {/* Cancel Order Button */}
                 {order.status === 'Pending' ? (
