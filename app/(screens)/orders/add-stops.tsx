@@ -102,8 +102,8 @@ export default function AddStopsScreen() {
     const activeStop = stops.find((stop) => stop.id === activeStopId);
     const mapCoordinates = useMemo(() => ([
         pickup?.coordinate,
-        dropoff?.coordinate,
         ...stops.map((stop) => stop.coordinate),
+        dropoff?.coordinate,
     ]
         .filter(Boolean) as LatLng[]), [dropoff?.coordinate, pickup?.coordinate, stops]);
     const routePointKey = mapCoordinates.map(formatCoordinate).join('|');
@@ -381,31 +381,6 @@ export default function AddStopsScreen() {
                                 </TouchableOpacity>
                             </View>
 
-                            {/* Dotted Line */}
-                            <View style={styles.verticalLineContainer}>
-                                <View style={styles.verticalLine} />
-                            </View>
-
-                            {/* Initial Drop Location (Fixed as Stop 1) */}
-                            <View style={styles.locationRow}>
-                                <View style={[styles.timelineDot, styles.dotRed]}>
-                                    <Text style={styles.dotText}>1</Text>
-                                </View>
-                                <View style={styles.locationInfo}>
-                                    <Text style={styles.locationPerson}>{getContactLine(dropoff)}</Text>
-                                    <Text style={styles.locationAddress} numberOfLines={1}>
-                                        {getAddressLine(dropoff?.address, 'Choose dropoff location')}
-                                    </Text>
-                                </View>
-                                <TouchableOpacity
-                                    onPress={() => router.push('/orders/drop-location')}
-                                    style={styles.dragIconButton}
-                                    activeOpacity={0.7}
-                                >
-                                    <Ionicons name="menu" size={20} color="#999" />
-                                </TouchableOpacity>
-                            </View>
-
                             {/* Dynamic Stops */}
                             {stops.map((stop, index) => (
                                 <View key={stop.id}>
@@ -416,7 +391,7 @@ export default function AddStopsScreen() {
 
                                     <View style={styles.locationRow}>
                                         <View style={[styles.timelineDot, styles.dotRed]}>
-                                            <Text style={styles.dotText}>{index + 2}</Text>
+                                            <Text style={styles.dotText}>{index + 1}</Text>
                                         </View>
                                         <View style={styles.inputContainer}>
                                             <TextInput
@@ -475,6 +450,32 @@ export default function AddStopsScreen() {
                                 </View>
                             ))}
 
+                            {/* Dotted Line */}
+                            <View style={styles.verticalLineContainer}>
+                                <View style={styles.verticalLine} />
+                            </View>
+
+                            {/* Dropoff Location (At the end with red marker icon) */}
+                            <View style={styles.locationRow}>
+                                <Image
+                                    source={require('../../../assets/drop.png')}
+                                    style={{ width: 24, height: 24, marginRight: 12 }}
+                                    resizeMode="contain"
+                                />
+                                <View style={styles.locationInfo}>
+                                    <Text style={styles.locationPerson}>{getContactLine(dropoff)}</Text>
+                                    <Text style={styles.locationAddress} numberOfLines={1}>
+                                        {getAddressLine(dropoff?.address, 'Choose dropoff location')}
+                                    </Text>
+                                </View>
+                                <TouchableOpacity
+                                    onPress={() => router.push('/orders/drop-location')}
+                                    style={styles.dragIconButton}
+                                    activeOpacity={0.7}
+                                >
+                                    <Ionicons name="menu" size={20} color="#999" />
+                                </TouchableOpacity>
+                            </View>
                         </View>
 
                         {/* Add Stop Button */}
@@ -528,7 +529,7 @@ export default function AddStopsScreen() {
                                 stop.coordinate ? (
                                     <Marker key={stop.id} coordinate={stop.coordinate}>
                                         <View style={[styles.mapStopMarker, styles.dotRed]}>
-                                            <Text style={styles.dotText}>{index + 2}</Text>
+                                            <Text style={styles.dotText}>{index + 1}</Text>
                                         </View>
                                     </Marker>
                                 ) : null

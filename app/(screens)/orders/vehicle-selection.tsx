@@ -5,6 +5,7 @@ import React from 'react';
 import { Alert, Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useAppDispatch, useAppSelector } from '../../../Redux/hooks';
 import { setSelectedVehicle, swapPickupAndDropoff } from '../../../Redux/Slice/orderDraftSlice';
+import { useEstimateOrderPriceQuery } from '../../../Redux/api/orderApi';
 import { Colors } from '../../../constants/Colors';
 
 const STEPS = ['Locations', 'Vehicle', 'Checkout', 'Payment'];
@@ -54,6 +55,39 @@ export default function VehicleSelectionScreen() {
         routeDistanceKm,
         routeDurationMin,
     } = useAppSelector((state) => state.orderDraft);
+
+    const { data: bikeEstimate, isFetching: isBikeFetching } = useEstimateOrderPriceQuery({
+        distanceKm: routeDistanceKm ?? 0,
+        durationMin: routeDurationMin ?? 0,
+        vehicleType: 'Bike',
+    }, { skip: routeDistanceKm == null });
+
+    const { data: carEstimate, isFetching: isCarFetching } = useEstimateOrderPriceQuery({
+        distanceKm: routeDistanceKm ?? 0,
+        durationMin: routeDurationMin ?? 0,
+        vehicleType: 'Car',
+    }, { skip: routeDistanceKm == null });
+
+    const { data: truckEstimate, isFetching: isTruckFetching } = useEstimateOrderPriceQuery({
+        distanceKm: routeDistanceKm ?? 0,
+        durationMin: routeDurationMin ?? 0,
+        vehicleType: 'Truck',
+    }, { skip: routeDistanceKm == null });
+
+    const getVehiclePrice = (vehicleId: string) => {
+        if (routeDistanceKm == null) return 'Calculating...';
+        switch (vehicleId) {
+            case 'bike':
+                return isBikeFetching ? 'Calculating...' : bikeEstimate?.data?.price ? `${bikeEstimate.data.price.toFixed(2)}` : 'N/A';
+            case 'car':
+                return isCarFetching ? 'Calculating...' : carEstimate?.data?.price ? `${carEstimate.data.price.toFixed(2)}` : 'N/A';
+            case 'truck':
+                return isTruckFetching ? 'Calculating...' : truckEstimate?.data?.price ? `${truckEstimate.data.price.toFixed(2)}` : 'N/A';
+            default:
+                return '—';
+        }
+    };
+
     const missingCheckoutFields = [
         !pickup?.coordinate ? 'pickup location' : null,
         !dropoff?.coordinate ? 'dropoff location' : null,
@@ -132,37 +166,54 @@ export default function VehicleSelectionScreen() {
                         </View>
 
                         <View style={styles.journeyContent}>
-                            <View style={styles.timelineContainer}>
-                                <Image source={require('../../../assets/pick.png')} style={{ width: 20, height: 20 }} resizeMode="contain" />
-                                <View style={styles.timelineLine} />
-                                <Image source={require('../../../assets/drop.png')} style={{ width: 20, height: 20 }} resizeMode="contain" />
-                            </View>
-
                             <View style={styles.locationsWrapper}>
-                                <View style={styles.locationItem}>
-                                    <Text style={styles.locationPerson}>{getContactLine(pickup)}</Text>
-                                    <Text style={styles.locationAddress} numberOfLines={1}>
-                                        {getAddressLine(pickup?.address, 'Choose pickup location')}
-                                    </Text>
+                                {/* Pickup */}
+                                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                    <Image source={require('../../../assets/pick.png')} style={{ width: 20, height: 20, marginRight: 12 }} resizeMode="contain" />
+                                    <View style={styles.locationItem}>
+                                        <Text style={styles.locationPerson}>{getContactLine(pickup)}</Text>
+                                        <Text style={styles.locationAddress} numberOfLines={1}>
+                                            {getAddressLine(pickup?.address, 'Choose pickup location')}
+                                        </Text>
+                                    </View>
                                 </View>
-                                <View style={{ height: 24 }} />
-                                <View style={styles.locationItem}>
-                                    <Text style={styles.locationPerson}>{getContactLine(dropoff)}</Text>
-                                    <Text style={styles.locationAddress} numberOfLines={1}>
-                                        {getAddressLine(dropoff?.address, 'Choose dropoff location')}
-                                    </Text>
-                                </View>
+
+                                {/* Stops */}
                                 {stops.map((stop, index) => (
                                     <View key={stop.id}>
-                                        <View style={{ height: 24 }} />
-                                        <View style={styles.locationItem}>
-                                            <Text style={styles.locationPerson}>Stop {index + 1}</Text>
-                                            <Text style={styles.locationAddress} numberOfLines={1}>
-                                                {getAddressLine(stop.address, 'Choose stop location')}
-                                            </Text>
+                                        {/* Connector line */}
+                                        <View style={{ paddingLeft: 9, height: 16, justifyContent: 'center' }}>
+                                            <View style={{ width: 1, height: '100%', borderColor: '#000', borderWidth: 0.5, borderStyle: 'dashed' }} />
+                                        </View>
+                                        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                            <View style={[styles.timelineDot, styles.dotRed, { marginRight: 12 }]}>
+                                                <Text style={styles.dotText}>{index + 1}</Text>
+                                            </View>
+                                            <View style={styles.locationItem}>
+                                                <Text style={styles.locationPerson}>Stop {index + 1}</Text>
+                                                <Text style={styles.locationAddress} numberOfLines={1}>
+                                                    {getAddressLine(stop.address, 'Choose stop location')}
+                                                </Text>
+                                            </View>
                                         </View>
                                     </View>
                                 ))}
+
+                                {/* Connector line */}
+                                <View style={{ paddingLeft: 9, height: 16, justifyContent: 'center' }}>
+                                    <View style={{ width: 1, height: '100%', borderColor: '#000', borderWidth: 0.5, borderStyle: 'dashed' }} />
+                                </View>
+
+                                {/* Dropoff */}
+                                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                    <Image source={require('../../../assets/drop.png')} style={{ width: 20, height: 20, marginRight: 12 }} resizeMode="contain" />
+                                    <View style={styles.locationItem}>
+                                        <Text style={styles.locationPerson}>{getContactLine(dropoff)}</Text>
+                                        <Text style={styles.locationAddress} numberOfLines={1}>
+                                            {getAddressLine(dropoff?.address, 'Choose dropoff location')}
+                                        </Text>
+                                    </View>
+                                </View>
                             </View>
 
                             <TouchableOpacity
@@ -197,6 +248,12 @@ export default function VehicleSelectionScreen() {
                                 key={vehicle.id}
                                 onPress={() => dispatch(setSelectedVehicle(vehicle.id))}
                                 activeOpacity={0.9}
+                                style={[
+                                    styles.vehicleTouch,
+                                    selectedVehicleId === vehicle.id
+                                        ? styles.vehicleTouchSelected
+                                        : styles.vehicleTouchUnselected
+                                ]}
                             >
                                 <LinearGradient
                                     colors={vehicle.colors as any}
@@ -204,7 +261,9 @@ export default function VehicleSelectionScreen() {
                                     end={{ x: 1, y: 0 }}
                                     style={[
                                         styles.vehicleCard,
-                                        selectedVehicleId === vehicle.id && styles.vehicleCardSelected
+                                        selectedVehicleId === vehicle.id
+                                            ? styles.vehicleCardSelected
+                                            : styles.vehicleCardUnselected
                                     ]}
                                 >
                                     <View style={styles.vehicleImageContainer}>
@@ -216,7 +275,7 @@ export default function VehicleSelectionScreen() {
                                     </View>
                                     <View style={styles.vehiclePriceContainer}>
                                         <Text style={styles.currencySymbol}>AED</Text>
-                                        <Text style={styles.vehiclePrice}>{vehicle.price}</Text>
+                                        <Text style={styles.vehiclePrice}>{getVehiclePrice(vehicle.id)}</Text>
                                     </View>
                                 </LinearGradient>
                             </TouchableOpacity>
@@ -445,16 +504,39 @@ const styles = StyleSheet.create({
         gap: 16,
         marginBottom: 24,
     },
+    vehicleTouch: {
+        borderRadius: 20,
+    },
+    vehicleTouchSelected: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 6 },
+        shadowOpacity: 0.35,
+        shadowRadius: 8,
+        elevation: 8,
+        zIndex: 10,
+    },
+    vehicleTouchUnselected: {
+        opacity: 0.65,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+        elevation: 2,
+    },
     vehicleCard: {
         flexDirection: 'row',
         alignItems: 'center',
         padding: 12,
         borderRadius: 20,
         height: 80,
+        borderWidth: 3,
+        borderColor: 'transparent',
     },
     vehicleCardSelected: {
-        borderWidth: 2,
-        borderColor: '#333',
+        borderColor: '#000000',
+    },
+    vehicleCardUnselected: {
+        borderColor: 'transparent',
     },
     vehicleImageContainer: {
         width: 80,

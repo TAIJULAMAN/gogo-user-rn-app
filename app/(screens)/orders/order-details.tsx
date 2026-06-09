@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useState } from 'react';
-import { Alert, ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View, ActivityIndicator, Image } from 'react-native';
+import { Alert, ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View, ActivityIndicator, Image, Modal, Linking } from 'react-native';
 import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
 import CancelOrderModal from '../../../components/CancelOrderModal';
 import InvoiceModal from '../../../components/InvoiceModal';
@@ -14,12 +14,22 @@ export default function OrderDetailsScreen() {
     const { id } = useLocalSearchParams();
     const [showInvoice, setShowInvoice] = useState(false);
     const [showCancelModal, setShowCancelModal] = useState(false);
+    const [isProofImageModalVisible, setIsProofImageModalVisible] = useState(false);
 
     const { data: order, isLoading, isError, refetch } = useGetOrderByIdQuery(id as string, {
         skip: !id,
         refetchOnMountOrArgChange: true
     });
     const [cancelOrder, { isLoading: isCancelling }] = useCancelOrderMutation();
+
+    const handleCall = () => {
+        const phone = order?.rider?.phone || order?.driver?.phone;
+        if (phone) {
+            Linking.openURL(`tel:${phone}`);
+        } else {
+            Alert.alert("Error", "Phone number not available");
+        }
+    };
 
     const handleCancelOrder = () => {
         setShowCancelModal(true);
@@ -117,6 +127,7 @@ export default function OrderDetailsScreen() {
             <ScrollView
                 showsVerticalScrollIndicator={false}
                 contentContainerStyle={styles.scrollContent}
+                removeClippedSubviews={false}
             >
                 {/* Status Card */}
                 <Animated.View
@@ -177,9 +188,9 @@ export default function OrderDetailsScreen() {
                     <View style={styles.driverContainer}>
                         <View style={styles.driverAvatar}>
                             {driver?.profileImage ? (
-                                <Image source={{ uri: driver.profileImage }} style={styles.avatarImage} />
+                                <Image key="driver-avatar-image" source={{ uri: driver.profileImage }} style={styles.avatarImage} />
                             ) : (
-                                <Ionicons name="person" size={32} color={Colors.primaryDark} />
+                                <Ionicons key="driver-avatar-placeholder" name="person" size={32} color={Colors.primaryDark} />
                             )}
                         </View>
                         <View style={styles.driverInfo}>
@@ -190,20 +201,45 @@ export default function OrderDetailsScreen() {
                                         : order.rider?.name || order.driver?.name || 'Your Driver')
                                     : 'Searching for driver...'}
                             </Text>
-                            {(order.rider || order.driver) && (
-                                <View style={styles.ratingContainer}>
+                            {(order.rider || order.driver) ? (
+                                <View key="driver-rating-badge" style={styles.ratingContainer}>
                                     <Ionicons name="star" size={14} color="#FFB800" />
                                     <Text style={styles.ratingText}>{order.rider?.rating || order.driver?.rating || '5.0'}</Text>
                                 </View>
-                            )}
+                            ) : null}
                         </View>
-                        {(order.rider?.phone || order.driver?.phone) && (
-                            <TouchableOpacity style={styles.callButton}>
+                        {(order.rider?.phone || order.driver?.phone) ? (
+                            <TouchableOpacity key="driver-call-button" style={styles.callButton} onPress={handleCall}>
                                 <Ionicons name="call" size={20} color="#fff" />
                             </TouchableOpacity>
-                        )}
+                        ) : null}
                     </View>
                 </Animated.View>
+
+                {/* Delivery Proof */}
+                {order.completionProof ? (
+                    <Animated.View
+                        key="delivery-proof-card"
+                        entering={FadeInDown.delay(500).duration(600)}
+                        style={styles.card}
+                    >
+                        <Text style={styles.cardTitle}>Delivery Proof</Text>
+                        <TouchableOpacity 
+                            activeOpacity={0.9} 
+                            onPress={() => setIsProofImageModalVisible(true)}
+                            style={styles.proofContainer}
+                        >
+                            <Image 
+                                source={{ uri: order.completionProof }} 
+                                style={styles.proofImage} 
+                                resizeMode="cover"
+                            />
+                            <View style={styles.zoomIconContainer}>
+                                <Ionicons name="expand" size={16} color="#fff" />
+                            </View>
+                        </TouchableOpacity>
+                    </Animated.View>
+                ) : null}
 
                 {/* Price Breakdown */}
                 <Animated.View
@@ -241,35 +277,49 @@ export default function OrderDetailsScreen() {
                     style={styles.actionsContainer}
                 >
                     <TouchableOpacity
+                        key="view-receipt-action"
                         style={styles.actionButton}
                         onPress={() => setShowInvoice(true)}
                     >
                         <Ionicons name="receipt-outline" size={20} color={Colors.text} />
-                        <Text style={styles.actionButtonText}>Download Receipt</Text>
+                        <Text style={styles.actionButtonText}>View Receipt</Text>
                     </TouchableOpacity>
 
-                    {order.status === 'Completed' && (
-                        <TouchableOpacity
-                            style={[styles.actionButton, styles.actionButtonPrimary]}
-                            onPress={() => router.push({
-                                pathname: '/orders/rate-driver',
-                                params: { 
-                                    orderId: order._id || order.id, 
-                                    driverName: order.rider
-                                        ? ((order.rider.firstName || order.rider.lastName)
-                                            ? `${order.rider.firstName || ''} ${order.rider.lastName || ''}`.trim()
-                                            : order.rider.name || 'Driver')
-                                        : 'Driver'
-                                }
-                            })}
-                        >
-                            <Ionicons name="star-outline" size={20} color={Colors.text} />
-                            <Text style={styles.actionButtonText}>Rate Driver</Text>
-                        </TouchableOpacity>
-                    )}
+                    {order.status === 'Completed' ? (
+                        order.review?.rating ? (
+                            <TouchableOpacity
+                                key="rated-action"
+                                style={[styles.actionButton, styles.actionButtonPrimary, { opacity: 0.65 }]}
+                                disabled={true}
+                            >
+                                <Ionicons name="star" size={20} color="#FFB800" />
+                                <Text style={styles.actionButtonText}>Rated ({order.review.rating}★)</Text>
+                            </TouchableOpacity>
+                        ) : (
+                            <TouchableOpacity
+                                key="rate-driver-action"
+                                style={[styles.actionButton, styles.actionButtonPrimary]}
+                                onPress={() => router.push({
+                                    pathname: '/orders/rate-driver',
+                                    params: { 
+                                        orderId: order._id || order.id, 
+                                        driverName: order.rider
+                                            ? ((order.rider.firstName || order.rider.lastName)
+                                                ? `${order.rider.firstName || ''} ${order.rider.lastName || ''}`.trim()
+                                                : order.rider.name || 'Driver')
+                                            : 'Driver'
+                                    }
+                                })}
+                            >
+                                <Ionicons name="star-outline" size={20} color={Colors.text} />
+                                <Text style={styles.actionButtonText}>Rate Driver</Text>
+                            </TouchableOpacity>
+                        )
+                    ) : null}
 
-                    {['Pending', 'Accepted'].includes(order.status) && (
+                    {order.status === 'Pending' ? (
                         <TouchableOpacity
+                            key="cancel-order-action"
                             style={[styles.actionButton, { borderColor: '#FF5252' }]}
                             onPress={handleCancelOrder}
                             disabled={isCancelling}
@@ -279,7 +329,7 @@ export default function OrderDetailsScreen() {
                                 {isCancelling ? 'Cancelling...' : 'Cancel Order'}
                             </Text>
                         </TouchableOpacity>
-                    )}
+                    ) : null}
                 </Animated.View>
             </ScrollView>
 
@@ -294,6 +344,30 @@ export default function OrderDetailsScreen() {
                 onClose={() => setShowCancelModal(false)}
                 onConfirm={confirmCancel}
             />
+
+            {/* Full screen proof image viewer */}
+            <Modal
+                visible={isProofImageModalVisible}
+                transparent={true}
+                onRequestClose={() => setIsProofImageModalVisible(false)}
+                animationType="fade"
+            >
+                <View style={styles.modalOverlay}>
+                    <TouchableOpacity 
+                        style={styles.closeModalButton} 
+                        onPress={() => setIsProofImageModalVisible(false)}
+                    >
+                        <Ionicons name="close" size={30} color="#fff" />
+                    </TouchableOpacity>
+                    {order.completionProof && (
+                        <Image 
+                            source={{ uri: order.completionProof }} 
+                            style={styles.modalImage} 
+                            resizeMode="contain" 
+                        />
+                    )}
+                </View>
+            </Modal>
         </View>
     );
 }
@@ -598,5 +672,43 @@ const styles = StyleSheet.create({
         color: '#fff',
         fontSize: 16,
         fontWeight: '700',
+    },
+    proofContainer: {
+        borderRadius: 16,
+        overflow: 'hidden',
+        borderWidth: 1,
+        borderColor: '#E0E0E0',
+        backgroundColor: '#f8f9fa',
+        height: 200,
+        position: 'relative',
+    },
+    proofImage: {
+        width: '100%',
+        height: '100%',
+    },
+    zoomIconContainer: {
+        position: 'absolute',
+        bottom: 12,
+        right: 12,
+        backgroundColor: 'rgba(0, 0, 0, 0.6)',
+        borderRadius: 20,
+        padding: 8,
+    },
+    modalOverlay: {
+        flex: 1,
+        backgroundColor: 'rgba(0, 0, 0, 0.95)',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    closeModalButton: {
+        position: 'absolute',
+        top: 50,
+        right: 20,
+        zIndex: 10,
+        padding: 10,
+    },
+    modalImage: {
+        width: '100%',
+        height: '80%',
     },
 });

@@ -1,10 +1,10 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React from 'react';
-import { Image, ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Image, ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View, RefreshControl } from 'react-native';
 import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
 import { useAppDispatch, useAppSelector } from '../../Redux/hooks';
-import { setSelectedVehicle } from '../../Redux/Slice/orderDraftSlice';
+import { setSelectedVehicle, resetOrderDraft } from '../../Redux/Slice/orderDraftSlice';
 import { Colors } from '../../constants/Colors';
 import { useGetMyProfileQuery, useGetNotificationsQuery } from '../../Redux/api/userApi';
 
@@ -33,8 +33,8 @@ const FeatureItem = ({ text, index }: { text: string, index: number }) => (
 export default function HomeScreen() {
     const router = useRouter();
     const dispatch = useAppDispatch();
-    const { data: profileData } = useGetMyProfileQuery({});
-    const { data: notificationsData } = useGetNotificationsQuery({});
+    const { data: profileData, refetch: refetchProfile } = useGetMyProfileQuery({});
+    const { data: notificationsData, refetch: refetchNotifications } = useGetNotificationsQuery({});
     const user = useAppSelector((state) => state.auth.user) || profileData?.data;
     const selectedVehicleId = useAppSelector((state) => state.orderDraft.selectedVehicleId);
     const activeVehicleId = selectedVehicleId || 'car';
@@ -42,6 +42,20 @@ export default function HomeScreen() {
 
     const notifications = notificationsData?.data?.result || (Array.isArray(notificationsData?.data) ? notificationsData?.data : []);
     const unreadCount = notifications.filter((n: any) => !n.isRead).length;
+
+    const [refreshing, setRefreshing] = React.useState(false);
+
+    const onRefresh = React.useCallback(async () => {
+        setRefreshing(true);
+        try {
+            dispatch(resetOrderDraft());
+            await Promise.all([refetchProfile(), refetchNotifications()]);
+        } catch (error) {
+            console.error('Refresh failed:', error);
+        } finally {
+            setRefreshing(false);
+        }
+    }, [dispatch, refetchProfile, refetchNotifications]);
 
     const handleBookNow = () => {
         dispatch(setSelectedVehicle(activeVehicleId));
@@ -51,7 +65,18 @@ export default function HomeScreen() {
     return (
         <View style={styles.container}>
             <StatusBar barStyle="light-content" />
-            <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
+            <ScrollView
+                showsVerticalScrollIndicator={false}
+                contentContainerStyle={styles.scrollContent}
+                refreshControl={
+                    <RefreshControl
+                        refreshing={refreshing}
+                        onRefresh={onRefresh}
+                        colors={[Colors.primaryDark]}
+                        tintColor={Colors.primaryDark}
+                    />
+                }
+            >
                 {/* Header Section */}
                 <View style={styles.header}>
                     <Animated.View

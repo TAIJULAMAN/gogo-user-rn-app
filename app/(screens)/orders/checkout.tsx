@@ -105,6 +105,28 @@ export default function CheckoutScreen() {
     };
 
     const estimate = estimateData?.data;
+
+    React.useEffect(() => {
+        if (estimate) {
+            console.log("\n====== PRICE CALCULATION LOG ======");
+            console.log(`Route Segment Details:`);
+            console.log(`  - Pickup Address: ${pickup?.address || 'N/A'}`);
+            stops.forEach((stop, i) => {
+                console.log(`  - Stop ${i + 1} Address: ${stop.address || 'N/A'}`);
+            });
+            console.log(`  - Dropoff Address: ${dropoff?.address || 'N/A'}`);
+            console.log(`-----------------------------------`);
+            console.log(`Vehicle Selection: ${selectedVehicle?.name || 'N/A'} (${estimate.vehicleType})`);
+            console.log(`Total Distance: ${estimate.distanceKm} km`);
+            console.log(`Total Duration: ${estimate.durationMin} mins`);
+            console.log(`-----------------------------------`);
+            console.log(`Formula Logic:`);
+            console.log(`  Price = Base Fee + (Distance * Rate)`);
+            console.log(`  Price = ${estimate.baseCharge ?? 'N/A'} AED + (${estimate.distanceKm} km * ${estimate.ratePerKm ?? 'N/A'} AED/km)`);
+            console.log(`  Calculated Price: ${estimate.price} ${estimate.currency}`);
+            console.log("===================================\n");
+        }
+    }, [estimate, pickup?.address, dropoff?.address, stops, selectedVehicle]);
     const formattedPrice = estimate
         ? `${estimate.currency} ${estimate.price.toFixed(2)}`
         : !canCheckout
@@ -191,6 +213,17 @@ export default function CheckoutScreen() {
                                     {getAddressLine(pickup?.address, 'Choose pickup location')}
                                 </Text>
                             </View>
+                            {stops.map((stop, index) => (
+                                <React.Fragment key={stop.id}>
+                                    <View style={styles.routeLine} />
+                                    <View style={styles.routePoint}>
+                                        <View style={[styles.dot, styles.dotOrange]} />
+                                        <Text style={styles.routeText} numberOfLines={1}>
+                                            {getAddressLine(stop.address, `Stop ${index + 1}`)}
+                                        </Text>
+                                    </View>
+                                </React.Fragment>
+                            ))}
                             <View style={styles.routeLine} />
                             <View style={styles.routePoint}>
                                 <View style={[styles.dot, styles.dotRed]} />
@@ -198,17 +231,6 @@ export default function CheckoutScreen() {
                                     {getAddressLine(dropoff?.address, 'Choose dropoff location')}
                                 </Text>
                             </View>
-                            {stops.map((stop, index) => (
-                                <React.Fragment key={stop.id}>
-                                    <View style={styles.routeLine} />
-                                    <View style={styles.routePoint}>
-                                        <View style={[styles.dot, styles.dotRed]} />
-                                        <Text style={styles.routeText} numberOfLines={1}>
-                                            {getAddressLine(stop.address, `Stop ${index + 1}`)}
-                                        </Text>
-                                    </View>
-                                </React.Fragment>
-                            ))}
                         </View>
                     </View>
 
@@ -389,6 +411,9 @@ const styles = StyleSheet.create({
     },
     dotRed: {
         backgroundColor: '#FF3D00',
+    },
+    dotOrange: {
+        backgroundColor: '#FF9100',
     },
     routeText: {
         fontSize: 12,

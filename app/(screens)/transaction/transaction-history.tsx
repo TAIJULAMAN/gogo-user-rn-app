@@ -1,29 +1,19 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import React, { useState } from 'react';
+import React from 'react';
 import { ActivityIndicator, RefreshControl, ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
 import { useGetPaymentHistoryQuery } from '../../../Redux/api/paymentApi';
 import { Colors } from '../../../constants/Colors';
 import { getPaymentArray, toTransactionItem } from '../../../utils/paymentFormatters';
 
-const FILTERS = ['All', 'Payments', 'Refunds'];
-
 export default function TransactionHistoryScreen() {
     const router = useRouter();
-    const [selectedFilter, setSelectedFilter] = useState('All');
     const { data, isError, isFetching, refetch } = useGetPaymentHistoryQuery({
         page: 1,
         limit: 50,
     });
-    const transactions = getPaymentArray(data).map(toTransactionItem);
-
-    const filteredTransactions = transactions.filter(transaction => {
-        if (selectedFilter === 'All') return true;
-        if (selectedFilter === 'Payments') return transaction.type === 'Payment';
-        if (selectedFilter === 'Refunds') return transaction.type === 'Refund';
-        return true;
-    });
+    const filteredTransactions = getPaymentArray(data).map(toTransactionItem);
 
     return (
         <View style={styles.container}>
@@ -39,31 +29,6 @@ export default function TransactionHistoryScreen() {
                 </TouchableOpacity>
                 <Text style={styles.headerTitle}>Transaction History</Text>
                 <View style={{ width: 24 }} />
-            </Animated.View>
-
-            {/* Filters */}
-            <Animated.View
-                entering={FadeInDown.delay(200).duration(600)}
-                style={styles.filtersContainer}
-            >
-                {FILTERS.map((filter) => (
-                    <TouchableOpacity
-                        key={filter}
-                        style={[
-                            styles.filterButton,
-                            selectedFilter === filter && styles.filterButtonActive
-                        ]}
-                        onPress={() => setSelectedFilter(filter)}
-                        activeOpacity={0.7}
-                    >
-                        <Text style={[
-                            styles.filterText,
-                            selectedFilter === filter && styles.filterTextActive
-                        ]}>
-                            {filter}
-                        </Text>
-                    </TouchableOpacity>
-                ))}
             </Animated.View>
 
             <ScrollView
@@ -124,7 +89,7 @@ export default function TransactionHistoryScreen() {
                         <Ionicons name="receipt-outline" size={80} color="#E0E0E0" />
                         <Text style={styles.emptyTitle}>No Transactions</Text>
                         <Text style={styles.emptyMessage}>
-                            No transactions found for this filter
+                            You do not have any transactions yet
                         </Text>
                     </View>
                 )}

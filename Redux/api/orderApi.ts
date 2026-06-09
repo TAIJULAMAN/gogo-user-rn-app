@@ -21,6 +21,8 @@ export type EstimateOrderPriceResponse = {
     vehicleType?: "Bike" | "Car" | "Truck";
     price: number;
     currency: string;
+    baseCharge?: number;
+    ratePerKm?: number;
   };
 };
 

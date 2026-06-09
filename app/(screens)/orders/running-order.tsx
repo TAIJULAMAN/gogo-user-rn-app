@@ -31,6 +31,7 @@ export default function RunningOrderScreen() {
     const { id } = useLocalSearchParams<{ id: string }>();
     const [showCancelModal, setShowCancelModal] = useState(false);
     const [routeCoords, setRouteCoords] = useState<LatLng[]>([]);
+    const [routeDurationText, setRouteDurationText] = useState<string>('');
     const mapRef = useRef<MapView>(null);
 
     const { data: order, isLoading, isError, refetch } = useGetOrderByIdQuery(id!, {
@@ -49,6 +50,16 @@ export default function RunningOrderScreen() {
         if (order.dropoff) points.push({ ...order.dropoff, type: 'dropoff' });
         return points;
     }, [order]);
+
+    const fallbackDurationText = useMemo(() => {
+        const dist = order?.distanceKm || 0;
+        if (dist <= 0) return 'Estimated: 15-20 min';
+        // Assume average delivery speed of 30 km/h (2 mins per km)
+        const durMins = Math.ceil(dist * 2);
+        const minTime = Math.max(5, Math.round(durMins * 0.9));
+        const maxTime = Math.max(10, Math.round(durMins * 1.2));
+        return `Estimated: ${minTime}-${maxTime} min`;
+    }, [order?.distanceKm]);
 
     useEffect(() => {
         if (routePoints.length < 2) return;
@@ -69,6 +80,20 @@ export default function RunningOrderScreen() {
                 if (result.routes?.[0]?.overview_polyline?.points) {
                     const decoded = decodePolyline(result.routes[0].overview_polyline.points);
                     setRouteCoords(decoded);
+
+                    // Extract and set real-time duration
+                    let totalDurationSeconds = 0;
+                    if (result.routes[0].legs) {
+                        result.routes[0].legs.forEach((leg: any) => {
+                            totalDurationSeconds += leg.duration?.value || 0;
+                        });
+                    }
+                    if (totalDurationSeconds > 0) {
+                        const durMins = Math.round(totalDurationSeconds / 60);
+                        const minTime = Math.max(2, Math.round(durMins * 0.9));
+                        const maxTime = Math.max(5, Math.round(durMins * 1.15));
+                        setRouteDurationText(`Estimated: ${minTime}-${maxTime} min`);
+                    }
                     
                     // Fit map to markers
                     setTimeout(() => {
@@ -208,7 +233,7 @@ export default function RunningOrderScreen() {
                     entering={FadeInDown.delay(300).springify().damping(15)}
                     style={styles.cardContainer}
                 >
-                    <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 20 }}>
+                    <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 20 }} removeClippedSubviews={false}>
 
                         {/* Arrival Estimate Card */}
                         <LinearGradient
@@ -219,7 +244,7 @@ export default function RunningOrderScreen() {
                                 <View style={{ flex: 1 }}>
                                     <Text style={styles.arrivalLabel}>{statusInfo.label}</Text>
                                     <Text style={styles.arrivalTime}>
-                                        {order.status === 'InProgress' ? 'Arriving Soon' : 'Estimated: 15-20 min'}
+                                        {order.status === 'InProgress' ? 'Arriving Soon' : (routeDurationText || fallbackDurationText)}
                                     </Text>
                                     <View style={styles.statusRow}>
                                         <Text style={[styles.statusHighlight, { color: statusInfo.color }]}>{statusInfo.highlight}</Text>
@@ -246,7 +271,7 @@ export default function RunningOrderScreen() {
 
                         {/* Driver Info Card */}
                         {driver ? (
-                            <View style={styles.driverCard}>
+                            <View key="driver-active-card" style={styles.driverCard}>
                                 <View style={styles.driverInfo}>
                                     <View style={styles.avatarContainer}>
                                         <Image
@@ -273,7 +298,7 @@ export default function RunningOrderScreen() {
                                 </View>
                             </View>
                         ) : (
-                            <View style={styles.driverCard}>
+                            <View key="driver-searching-card" style={styles.driverCard}>
                                 <ActivityIndicator size="small" color={Colors.primary} />
                                 <Text style={[styles.driverName, { marginLeft: 12 }]}>Finding a driver for you...</Text>
                             </View>
@@ -300,14 +325,14 @@ export default function RunningOrderScreen() {
                 </Animated.View>
 
                 {/* Cancel Order Button */}
-                {['Pending', 'Accepted'].includes(order.status) && (
-                    <View style={styles.footer}>
+                {order.status === 'Pending' ? (
+                    <View key="cancel-order-footer" style={styles.footer}>
                         <TouchableOpacity onPress={handleCancelOrder} style={styles.cancelButton} disabled={isCancelling}>
                             <Ionicons name="close" size={20} color="#FF3D00" />
                             <Text style={styles.cancelButtonText}>{isCancelling ? 'Cancelling...' : 'Cancel Order'}</Text>
                         </TouchableOpacity>
                     </View>
-                )}
+                ) : null}
             </View>
 
             <CancelOrderModal

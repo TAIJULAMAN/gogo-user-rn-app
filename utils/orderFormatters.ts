@@ -68,7 +68,7 @@ const formatDateTime = (value?: string) => {
 };
 
 const getLocationText = (point?: GeoPoint) =>
-  point?.label || point?.addressLine || "Unknown location";
+  point?.addressLine || point?.label || "Unknown location";
 
 export const toOrderItem = (order: Order) => {
   const id = order._id ?? order.id ?? "";
