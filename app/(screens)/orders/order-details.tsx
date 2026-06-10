@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useState } from 'react';
-import { Alert, ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View, ActivityIndicator, Image, Modal, Linking } from 'react-native';
+import { Alert, ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View, ActivityIndicator, Image, Modal } from 'react-native';
 import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
 import CancelOrderModal from '../../../components/CancelOrderModal';
 import InvoiceModal from '../../../components/InvoiceModal';
@@ -21,15 +21,6 @@ export default function OrderDetailsScreen() {
         refetchOnMountOrArgChange: true
     });
     const [cancelOrder, { isLoading: isCancelling }] = useCancelOrderMutation();
-
-    const handleCall = () => {
-        const phone = order?.rider?.phone || order?.driver?.phone;
-        if (phone) {
-            Linking.openURL(`tel:${phone}`);
-        } else {
-            Alert.alert("Error", "Phone number not available");
-        }
-    };
 
     const handleCancelOrder = () => {
         setShowCancelModal(true);
@@ -113,21 +104,26 @@ export default function OrderDetailsScreen() {
             <StatusBar barStyle="dark-content" />
 
             {/* Header */}
-            <View style={styles.header}>
+            <Animated.View
+                entering={FadeInUp.delay(100).duration(600)}
+                style={styles.header}
+            >
                 <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
                     <Ionicons name="arrow-back" size={24} color="#000" />
                 </TouchableOpacity>
                 <Text style={styles.headerTitle}>Order Details</Text>
                 <View style={{ width: 24 }} />
-            </View>
+            </Animated.View>
 
             <ScrollView
                 showsVerticalScrollIndicator={false}
                 contentContainerStyle={styles.scrollContent}
-                removeClippedSubviews={false}
             >
                 {/* Status Card */}
-                <View style={styles.statusCard}>
+                <Animated.View
+                    entering={FadeInDown.delay(200).duration(600)}
+                    style={styles.statusCard}
+                >
                     <View style={[styles.statusBadge, { backgroundColor: statusConfig.bg }]}>
                         <Ionicons name={statusConfig.icon} size={24} color={statusConfig.text} />
                         <Text style={[styles.statusText, { color: statusConfig.text }]}>
@@ -136,10 +132,13 @@ export default function OrderDetailsScreen() {
                     </View>
                     <Text style={styles.orderId}>#{orderDisplayId}</Text>
                     <Text style={styles.orderDate}>{new Date(order.createdAt).toLocaleDateString()} at {new Date(order.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</Text>
-                </View>
+                </Animated.View>
 
                 {/* Locations */}
-                <View style={styles.card}>
+                <Animated.View
+                    entering={FadeInDown.delay(300).duration(600)}
+                    style={styles.card}
+                >
                     <Text style={styles.cardTitle}>Delivery Route</Text>
 
                     <View style={styles.locationContainer}>
@@ -167,18 +166,21 @@ export default function OrderDetailsScreen() {
                             </View>
                         </View>
                     </View>
-                </View>
+                </Animated.View>
 
                 {/* Driver Info */}
-                <View style={styles.card}>
+                <Animated.View
+                    entering={FadeInDown.delay(400).duration(600)}
+                    style={styles.card}
+                >
                     <Text style={styles.cardTitle}>Driver Information</Text>
 
                     <View style={styles.driverContainer}>
                         <View style={styles.driverAvatar}>
                             {driver?.profileImage ? (
-                                <Image key="driver-avatar-image" source={{ uri: driver.profileImage }} style={styles.avatarImage} />
+                                <Image source={{ uri: driver.profileImage }} style={styles.avatarImage} />
                             ) : (
-                                <Ionicons key="driver-avatar-placeholder" name="person" size={32} color={Colors.primaryDark} />
+                                <Ionicons name="person" size={32} color={Colors.primaryDark} />
                             )}
                         </View>
                         <View style={styles.driverInfo}>
@@ -189,24 +191,27 @@ export default function OrderDetailsScreen() {
                                         : order.rider?.name || order.driver?.name || 'Your Driver')
                                     : 'Searching for driver...'}
                             </Text>
-                            {(order.rider || order.driver) ? (
-                                <View key="driver-rating-badge" style={styles.ratingContainer}>
+                            {(order.rider || order.driver) && (
+                                <View style={styles.ratingContainer}>
                                     <Ionicons name="star" size={14} color="#FFB800" />
                                     <Text style={styles.ratingText}>{order.rider?.rating || order.driver?.rating || '5.0'}</Text>
                                 </View>
-                            ) : null}
+                            )}
                         </View>
-                        {(order.rider?.phone || order.driver?.phone) ? (
-                            <TouchableOpacity key="driver-call-button" style={styles.callButton} onPress={handleCall}>
+                        {(order.rider?.phone || order.driver?.phone) && (
+                            <TouchableOpacity style={styles.callButton}>
                                 <Ionicons name="call" size={20} color="#fff" />
                             </TouchableOpacity>
-                        ) : null}
+                        )}
                     </View>
-                </View>
+                </Animated.View>
 
                 {/* Delivery Proof */}
-                {order.completionProof ? (
-                    <View key="delivery-proof-card" style={styles.card}>
+                {order.completionProof && (
+                    <Animated.View
+                        entering={FadeInDown.delay(500).duration(600)}
+                        style={styles.card}
+                    >
                         <Text style={styles.cardTitle}>Delivery Proof</Text>
                         <TouchableOpacity 
                             activeOpacity={0.9} 
@@ -222,11 +227,14 @@ export default function OrderDetailsScreen() {
                                 <Ionicons name="expand" size={16} color="#fff" />
                             </View>
                         </TouchableOpacity>
-                    </View>
-                ) : null}
+                    </Animated.View>
+                )}
 
                 {/* Price Breakdown */}
-                <View style={styles.card}>
+                <Animated.View
+                    entering={FadeInDown.delay(600).duration(600)}
+                    style={styles.card}
+                >
                     <Text style={styles.cardTitle}>Price Breakdown</Text>
 
                     <View style={styles.breakdownRow}>
@@ -250,12 +258,14 @@ export default function OrderDetailsScreen() {
                         <Text style={styles.totalLabel}>Total Amount</Text>
                         <Text style={styles.totalAmount}>AED {Number(order.price).toFixed(2)}</Text>
                     </View>
-                </View>
+                </Animated.View>
 
                 {/* Actions */}
-                <View style={styles.actionsContainer}>
+                <Animated.View
+                    entering={FadeInDown.delay(700).duration(600)}
+                    style={styles.actionsContainer}
+                >
                     <TouchableOpacity
-                        key="view-receipt-action"
                         style={styles.actionButton}
                         onPress={() => setShowInvoice(true)}
                     >
@@ -263,10 +273,9 @@ export default function OrderDetailsScreen() {
                         <Text style={styles.actionButtonText}>View Receipt</Text>
                     </TouchableOpacity>
 
-                    {order.status === 'Completed' ? (
+                    {order.status === 'Completed' && (
                         order.review?.rating ? (
                             <TouchableOpacity
-                                key="rated-action"
                                 style={[styles.actionButton, styles.actionButtonPrimary, { opacity: 0.65 }]}
                                 disabled={true}
                             >
@@ -275,7 +284,6 @@ export default function OrderDetailsScreen() {
                             </TouchableOpacity>
                         ) : (
                             <TouchableOpacity
-                                key="rate-driver-action"
                                 style={[styles.actionButton, styles.actionButtonPrimary]}
                                 onPress={() => router.push({
                                     pathname: '/orders/rate-driver',
@@ -293,11 +301,10 @@ export default function OrderDetailsScreen() {
                                 <Text style={styles.actionButtonText}>Rate Driver</Text>
                             </TouchableOpacity>
                         )
-                    ) : null}
+                    )}
 
-                    {order.status === 'Pending' ? (
+                    {order.status === 'Pending' && (
                         <TouchableOpacity
-                            key="cancel-order-action"
                             style={[styles.actionButton, { borderColor: '#FF5252' }]}
                             onPress={handleCancelOrder}
                             disabled={isCancelling}
@@ -307,8 +314,8 @@ export default function OrderDetailsScreen() {
                                 {isCancelling ? 'Cancelling...' : 'Cancel Order'}
                             </Text>
                         </TouchableOpacity>
-                    ) : null}
-                </View>
+                    )}
+                </Animated.View>
             </ScrollView>
 
             <InvoiceModal

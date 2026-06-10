@@ -221,16 +221,19 @@ export default function RunningOrderScreen() {
             </View>
 
             {/* Header - Close Button */}
-            <View style={styles.header}>
+            <Animated.View entering={FadeInUp.delay(200)} style={styles.header}>
                 <TouchableOpacity onPress={() => router.back()} style={styles.closeButton}>
                     <Ionicons name="arrow-back" size={24} color="#000" />
                 </TouchableOpacity>
-            </View>
+            </Animated.View>
 
             {/* Bottom Content Layer */}
             <View style={styles.bottomContainer}>
-                <View style={styles.cardContainer}>
-                    <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 20 }} removeClippedSubviews={false}>
+                <Animated.View
+                    entering={FadeInDown.delay(300).springify().damping(15)}
+                    style={styles.cardContainer}
+                >
+                    <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 20 }}>
 
                         {/* Arrival Estimate Card */}
                         <LinearGradient
@@ -268,7 +271,7 @@ export default function RunningOrderScreen() {
 
                         {/* Driver Info Card */}
                         {driver ? (
-                            <View key="driver-active-card" style={styles.driverCard}>
+                            <View style={styles.driverCard}>
                                 <View style={styles.driverInfo}>
                                     <View style={styles.avatarContainer}>
                                         <Image
@@ -295,7 +298,7 @@ export default function RunningOrderScreen() {
                                 </View>
                             </View>
                         ) : (
-                            <View key="driver-searching-card" style={styles.driverCard}>
+                            <View style={styles.driverCard}>
                                 <ActivityIndicator size="small" color={Colors.primary} />
                                 <Text style={[styles.driverName, { marginLeft: 12 }]}>Finding a driver for you...</Text>
                             </View>
@@ -319,17 +322,17 @@ export default function RunningOrderScreen() {
                         </View>
 
                     </ScrollView>
-                </View>
+                </Animated.View>
 
                 {/* Cancel Order Button */}
-                {order.status === 'Pending' ? (
-                    <View key="cancel-order-footer" style={styles.footer}>
+                {order.status === 'Pending' && (
+                    <View style={styles.footer}>
                         <TouchableOpacity onPress={handleCancelOrder} style={styles.cancelButton} disabled={isCancelling}>
                             <Ionicons name="close" size={20} color="#FF3D00" />
                             <Text style={styles.cancelButtonText}>{isCancelling ? 'Cancelling...' : 'Cancel Order'}</Text>
                         </TouchableOpacity>
                     </View>
-                ) : null}
+                )}
             </View>
 
             <CancelOrderModal

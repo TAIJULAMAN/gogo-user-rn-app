@@ -38,7 +38,10 @@ const PAYMENT_METHODS = [
 export default function PaymentScreen() {
   const router = useRouter();
   const dispatch = useAppDispatch();
-  const params = useLocalSearchParams<{ orderPayload: string; amount: string }>();
+  const params = useLocalSearchParams<{
+    orderPayload: string;
+    amount: string;
+  }>();
   const orderPayloadRaw = params.orderPayload;
   const amount = params.amount;
 
@@ -51,11 +54,15 @@ export default function PaymentScreen() {
   const [createdOrderId, setCreatedOrderId] = useState<string | null>(null);
 
   const [createOrder] = useCreateOrderMutation();
-  
+
   const totalAmount = amount ? parseFloat(amount) : 39.82;
   const subtotal = (totalAmount / 1.15).toFixed(2);
   const serviceFee = (parseFloat(subtotal) * 0.08).toFixed(2);
-  const tax = (totalAmount - parseFloat(subtotal) - parseFloat(serviceFee)).toFixed(2);
+  const tax = (
+    totalAmount -
+    parseFloat(subtotal) -
+    parseFloat(serviceFee)
+  ).toFixed(2);
 
   const [initiatePayment, { isLoading: isInitiating }] =
     useInitiatePaymentMutation();
@@ -71,11 +78,11 @@ export default function PaymentScreen() {
     setIsProcessing(true);
     try {
       const orderPayload = JSON.parse(orderPayloadRaw);
-      
+
       // Step 1: Create Order
       const orderResponse = await createOrder({
         ...orderPayload,
-        paymentMethod: selectedMethod === 'cash' ? 'Cash' : 'Card'
+        paymentMethod: selectedMethod === "cash" ? "Cash" : "Card",
       }).unwrap();
 
       if (!orderResponse.success || !orderResponse.data?._id) {
@@ -134,12 +141,16 @@ export default function PaymentScreen() {
   const handleCloseModal = () => {
     dispatch(resetOrderDraft());
     setShowSuccessModal(false);
-    router.dismissAll()
-    if (createdOrderId) {
-      router.replace(`/orders/running-order?id=${createdOrderId}`);
-    } else {
-      router.replace("/orders/running-order");
-    }
+    // Wait for the native modal to finish closing before navigating.
+    // Navigating immediately can cause native view mounting conflicts
+    // (e.g. MapView) leading to crashes on Android.
+    setTimeout(() => {
+      if (createdOrderId) {
+        router.replace(`/orders/running-order?id=${createdOrderId}`);
+      } else {
+        router.replace("/orders/running-order");
+      }
+    }, 450);
   };
 
   const renderStepper = () => (
@@ -291,7 +302,9 @@ export default function PaymentScreen() {
               <View style={styles.divider} />
               <View style={styles.summaryRow}>
                 <Text style={styles.totalLabel}>Total Amount</Text>
-                <Text style={styles.totalValue}>AED {totalAmount.toFixed(2)}</Text>
+                <Text style={styles.totalValue}>
+                  AED {totalAmount.toFixed(2)}
+                </Text>
               </View>
             </View>
           </Animated.View>
@@ -311,9 +324,19 @@ export default function PaymentScreen() {
               ) : (
                 <>
                   <Text style={styles.payButtonText}>
-                    {selectedMethod === "cash" ? "Place Order" : `Pay AED ${totalAmount.toFixed(2)}`}
+                    {selectedMethod === "cash"
+                      ? "Place Order"
+                      : `Pay AED ${totalAmount.toFixed(2)}`}
                   </Text>
-                  <Ionicons name={selectedMethod === "cash" ? "checkmark-circle-outline" : "arrow-forward"} size={24} color="#000" />
+                  <Ionicons
+                    name={
+                      selectedMethod === "cash"
+                        ? "checkmark-circle-outline"
+                        : "arrow-forward"
+                    }
+                    size={24}
+                    color="#000"
+                  />
                 </>
               )}
             </TouchableOpacity>
