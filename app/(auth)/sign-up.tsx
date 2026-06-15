@@ -19,11 +19,29 @@ import Animated, { FadeInDown, FadeInUp } from "react-native-reanimated";
 import { useLocalSearchParams } from "expo-router";
 import { Alert } from "react-native";
 import { useSignUpMutation } from "../../Redux/api/authApi";
+import { COUNTRIES, Country } from "../../constants/countries";
+
+const getCountryFromPhone = (
+  phoneNumber?: string,
+  countryCode?: string,
+): Country => {
+  const countryByCode = COUNTRIES.find((country) => country.code === countryCode);
+  if (countryByCode) return countryByCode;
+
+  const normalizedPhone = String(phoneNumber || "").trim();
+  const countryByDialCode = [...COUNTRIES]
+    .sort((a, b) => b.dialCode.length - a.dialCode.length)
+    .find((country) => normalizedPhone.startsWith(country.dialCode));
+
+  return countryByDialCode || COUNTRIES[0];
+};
 
 export default function SignUpScreen() {
   const router = useRouter();
-  const { phone } = useLocalSearchParams();
+  const { phone, countryCode } = useLocalSearchParams();
   const [signUp, { isLoading }] = useSignUpMutation();
+  const initialPhoneNumber = Array.isArray(phone) ? phone[0] : phone;
+  const initialCountryCode = Array.isArray(countryCode) ? countryCode[0] : countryCode;
 
   // Registration Form State
   const [firstName, setFirstName] = useState("");
@@ -34,8 +52,11 @@ export default function SignUpScreen() {
   const [whatsappUpdate, setWhatsappUpdate] = useState(true);
   const [requirement, setRequirement] = useState("User");
   const [referralCode, setReferralCode] = useState("");
-  const [phoneNumber, setPhoneNumber] = useState((phone as string) || "");
+  const [phoneNumber, setPhoneNumber] = useState(initialPhoneNumber || "");
   const [newPhoneNumber, setNewPhoneNumber] = useState("");
+  const [selectedCountry, setSelectedCountry] = useState<Country>(() =>
+    getCountryFromPhone(initialPhoneNumber, initialCountryCode),
+  );
 
   const handleRegister = async () => {
     if (!firstName || !lastName || !email) {
@@ -100,7 +121,7 @@ export default function SignUpScreen() {
           style={styles.phoneRow}
         >
           <Image
-            source={{ uri: "https://flagcdn.com/w40/ae.png" }}
+            source={{ uri: selectedCountry.flag }}
             style={styles.flag}
             resizeMode="cover"
           />
@@ -233,7 +254,9 @@ export default function SignUpScreen() {
                 style={styles.modalConfirm}
                 onPress={() => {
                   if (newPhoneNumber.trim().length > 0) {
-                    setPhoneNumber(newPhoneNumber.trim());
+                    const nextPhoneNumber = newPhoneNumber.trim();
+                    setPhoneNumber(nextPhoneNumber);
+                    setSelectedCountry(getCountryFromPhone(nextPhoneNumber));
                   }
                   setShowChangeModal(false);
                 }}

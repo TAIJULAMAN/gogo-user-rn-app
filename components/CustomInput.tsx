@@ -19,16 +19,16 @@ export const CustomInput: React.FC<CustomInputProps> = ({
     const [isFocused, setIsFocused] = useState(false);
     const focusAnimation = useSharedValue(0);
 
-    const handleFocus = () => {
+    const handleFocus = (event: any) => {
         setIsFocused(true);
         focusAnimation.value = withTiming(1, { duration: 200 });
-        props.onFocus?.({} as any);
+        props.onFocus?.(event);
     };
 
-    const handleBlur = () => {
+    const handleBlur = (event: any) => {
         setIsFocused(false);
         focusAnimation.value = withTiming(0, { duration: 200 });
-        props.onBlur?.({} as any);
+        props.onBlur?.(event);
     };
 
     const animatedStyle = useAnimatedStyle(() => ({
@@ -43,11 +43,11 @@ export const CustomInput: React.FC<CustomInputProps> = ({
             <Animated.View style={[styles.inputWrapper, animatedStyle, error && styles.inputError]}>
                 {icon && <View style={styles.iconContainer}>{icon}</View>}
                 <TextInput
+                    {...props}
                     style={[styles.input, style]}
                     placeholderTextColor="#999"
                     onFocus={handleFocus}
                     onBlur={handleBlur}
-                    {...props}
                 />
             </Animated.View>
             {error && <Text style={styles.errorText}>{error}</Text>}

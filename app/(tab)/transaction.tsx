@@ -53,9 +53,9 @@ export default function TransactionScreen() {
             onPress={refetch}
             activeOpacity={0.7}
           >
-            <Ionicons name="alert-circle-outline" size={80} color="#E0E0E0" />
-            <Text style={styles.emptyTitle}>Unable to Load</Text>
-            <Text style={styles.emptyMessage}>Tap to refresh transactions</Text>
+            <Ionicons name="receipt-outline" size={80} color="#E0E0E0" />
+            <Text style={styles.emptyTitle}>No Transactions</Text>
+            <Text style={styles.emptyMessage}>There is no transaction yet</Text>
           </TouchableOpacity>
         )}
 
@@ -105,9 +105,7 @@ export default function TransactionScreen() {
           <View style={styles.emptyState}>
             <Ionicons name="receipt-outline" size={80} color="#E0E0E0" />
             <Text style={styles.emptyTitle}>No Transactions</Text>
-            <Text style={styles.emptyMessage}>
-              You do not have any transactions yet
-            </Text>
+            <Text style={styles.emptyMessage}>There is no transaction yet</Text>
           </View>
         )}
       </ScrollView>

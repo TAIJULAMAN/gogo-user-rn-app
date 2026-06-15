@@ -1,158 +1,135 @@
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
-import React from 'react';
-import { ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import Animated, { FadeInDown } from 'react-native-reanimated';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Stack, useRouter } from 'expo-router';
+import React, { useEffect, useState } from 'react';
+import { ScrollView, StatusBar, StyleSheet, Switch, Text, TouchableOpacity, View } from 'react-native';
+import Animated, { FadeInUp } from 'react-native-reanimated';
 import { Colors } from '../../../constants/Colors';
-
-interface Notification {
-    id: string;
-    type: 'order' | 'payment' | 'promo' | 'system';
-    title: string;
-    message: string;
-    time: string;
-    read: boolean;
-}
-
-const NOTIFICATIONS: Notification[] = [
-    {
-        id: '1',
-        type: 'order',
-        title: 'Order Delivered',
-        message: 'Your order #1234 has been delivered successfully',
-        time: '2 min ago',
-        read: false,
-    },
-    {
-        id: '2',
-        type: 'payment',
-        title: 'Payment Successful',
-        message: 'Payment of AED 39.82 was successful',
-        time: '1 hour ago',
-        read: false,
-    },
-    {
-        id: '3',
-        type: 'order',
-        title: 'Driver Assigned',
-        message: 'Ahmed has been assigned to your order',
-        time: '3 hours ago',
-        read: true,
-    },
-    {
-        id: '4',
-        type: 'promo',
-        title: 'Special Offer!',
-        message: 'Get 20% off on your next 3 orders',
-        time: '1 day ago',
-        read: true,
-    },
-    {
-        id: '5',
-        type: 'system',
-        title: 'App Update Available',
-        message: 'Update to version 2.0 for new features',
-        time: '2 days ago',
-        read: true,
-    },
-];
-
-const getNotificationIcon = (type: string) => {
-    switch (type) {
-        case 'order':
-            return { name: 'cube-outline' as const, color: '#4CAF50' };
-        case 'payment':
-            return { name: 'wallet-outline' as const, color: '#2196F3' };
-        case 'promo':
-            return { name: 'pricetag-outline' as const, color: '#FF9800' };
-        case 'system':
-            return { name: 'settings-outline' as const, color: '#9C27B0' };
-        default:
-            return { name: 'notifications-outline' as const, color: '#666' };
-    }
-};
 
 export default function NotificationsScreen() {
     const router = useRouter();
+    const [pushEnabled, setPushEnabled] = useState(true);
+    const [emailEnabled, setEmailEnabled] = useState(true);
+    const [smsEnabled, setSmsEnabled] = useState(false);
+    const [promoEnabled, setPromoEnabled] = useState(true);
+    const [isLoaded, setIsLoaded] = useState(false);
+
+    useEffect(() => {
+        const loadSettings = async () => {
+            try {
+                const savedSettings = await AsyncStorage.getItem('user_notification_settings');
+                if (savedSettings) {
+                    const settings = JSON.parse(savedSettings);
+                    if (settings.pushEnabled !== undefined) setPushEnabled(settings.pushEnabled);
+                    if (settings.emailEnabled !== undefined) setEmailEnabled(settings.emailEnabled);
+                    if (settings.smsEnabled !== undefined) setSmsEnabled(settings.smsEnabled);
+                    if (settings.promoEnabled !== undefined) setPromoEnabled(settings.promoEnabled);
+                }
+            } catch (error) {
+                console.error('Failed to load notification settings:', error);
+            } finally {
+                setIsLoaded(true);
+            }
+        };
+        loadSettings();
+    }, []);
+
+    useEffect(() => {
+        if (!isLoaded) return;
+        const saveSettings = async () => {
+            try {
+                const settings = {
+                    pushEnabled,
+                    emailEnabled,
+                    smsEnabled,
+                    promoEnabled,
+                };
+                await AsyncStorage.setItem('user_notification_settings', JSON.stringify(settings));
+            } catch (error) {
+                console.error('Failed to save notification settings:', error);
+            }
+        };
+        saveSettings();
+    }, [pushEnabled, emailEnabled, smsEnabled, promoEnabled, isLoaded]);
 
     return (
         <View style={styles.container}>
-            <StatusBar barStyle="light-content" />
+            <StatusBar barStyle="dark-content" />
+            <Stack.Screen options={{ headerShown: false }} />
 
-            {/* Header */}
-            <View style={styles.header}>
-                <Animated.View
-                    entering={FadeInDown.delay(100).duration(600)}
-                    style={styles.headerContent}
-                >
-                    <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-                        <Ionicons name="arrow-back" size={24} color="#000" />
-                    </TouchableOpacity>
-                    <Text style={styles.headerTitle}>Notifications</Text>
-                    <TouchableOpacity style={styles.markAllButton}>
-                        <Ionicons name="checkmark-done" size={24} color="#000" />
-                    </TouchableOpacity>
-                </Animated.View>
-            </View>
+            <Animated.View entering={FadeInUp.delay(100)} style={styles.header}>
+                <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+                    <Ionicons name="arrow-back" size={24} color={Colors.text} />
+                </TouchableOpacity>
+                <Text style={styles.headerTitle}>Notifications</Text>
+                <View style={{ width: 24 }} />
+            </Animated.View>
 
-            {/* Content */}
-            <View style={styles.content}>
-                <ScrollView
-                    showsVerticalScrollIndicator={false}
-                    contentContainerStyle={styles.scrollContent}
-                >
-                    {NOTIFICATIONS.map((notification, index) => (
-                        <Animated.View
-                            key={notification.id}
-                            entering={FadeInDown.delay(200 + index * 100).duration(600)}
-                        >
-                            <TouchableOpacity
-                                style={[
-                                    styles.notificationCard,
-                                    !notification.read && styles.notificationUnread
-                                ]}
-                                activeOpacity={0.7}
-                            >
-                                <View style={[
-                                    styles.iconContainer,
-                                    { backgroundColor: `${getNotificationIcon(notification.type).color}15` }
-                                ]}>
-                                    <Ionicons
-                                        name={getNotificationIcon(notification.type).name}
-                                        size={24}
-                                        color={getNotificationIcon(notification.type).color}
-                                    />
-                                </View>
+            <ScrollView style={styles.content}>
+                <View style={styles.section}>
+                    <Text style={styles.sectionTitle}>General</Text>
 
-                                <View style={styles.notificationContent}>
-                                    <View style={styles.notificationHeader}>
-                                        <Text style={styles.notificationTitle}>
-                                            {notification.title}
-                                        </Text>
-                                        {!notification.read && <View style={styles.unreadDot} />}
-                                    </View>
-                                    <Text style={styles.notificationMessage}>
-                                        {notification.message}
-                                    </Text>
-                                    <Text style={styles.notificationTime}>
-                                        {notification.time}
-                                    </Text>
-                                </View>
-                            </TouchableOpacity>
-                        </Animated.View>
-                    ))}
-
-                    {NOTIFICATIONS.length === 0 && (
-                        <View style={styles.emptyState}>
-                            <Ionicons name="notifications-off-outline" size={80} color="#E0E0E0" />
-                            <Text style={styles.emptyTitle}>No Notifications</Text>
-                            <Text style={styles.emptyMessage}>
-                                You're all caught up! We'll notify you when something new happens.
-                            </Text>
+                    <View style={styles.row}>
+                        <View style={styles.rowText}>
+                            <Text style={styles.rowLabel}>Push Notifications</Text>
+                            <Text style={styles.rowSubLabel}>Receive alerts about orders and delivery updates</Text>
                         </View>
-                    )}
-                </ScrollView>
-            </View>
+                        <Switch
+                            trackColor={{ false: '#767577', true: Colors.primary }}
+                            thumbColor={pushEnabled ? '#fff' : '#f4f3f4'}
+                            onValueChange={setPushEnabled}
+                            value={pushEnabled}
+                        />
+                    </View>
+
+                    <View style={styles.divider} />
+
+                    <View style={styles.row}>
+                        <View style={styles.rowText}>
+                            <Text style={styles.rowLabel}>Email Notifications</Text>
+                            <Text style={styles.rowSubLabel}>Receive receipts and account updates</Text>
+                        </View>
+                        <Switch
+                            trackColor={{ false: '#767577', true: Colors.primary }}
+                            thumbColor={emailEnabled ? '#fff' : '#f4f3f4'}
+                            onValueChange={setEmailEnabled}
+                            value={emailEnabled}
+                        />
+                    </View>
+
+                    <View style={styles.divider} />
+
+                    <View style={styles.row}>
+                        <View style={styles.rowText}>
+                            <Text style={styles.rowLabel}>SMS Notifications</Text>
+                            <Text style={styles.rowSubLabel}>Receive important updates via SMS</Text>
+                        </View>
+                        <Switch
+                            trackColor={{ false: '#767577', true: Colors.primary }}
+                            thumbColor={smsEnabled ? '#fff' : '#f4f3f4'}
+                            onValueChange={setSmsEnabled}
+                            value={smsEnabled}
+                        />
+                    </View>
+                </View>
+
+                <View style={styles.section}>
+                    <Text style={styles.sectionTitle}>Marketing</Text>
+
+                    <View style={styles.row}>
+                        <View style={styles.rowText}>
+                            <Text style={styles.rowLabel}>Promotional Offers</Text>
+                            <Text style={styles.rowSubLabel}>Receive updates about promotions and discounts</Text>
+                        </View>
+                        <Switch
+                            trackColor={{ false: '#767577', true: Colors.primary }}
+                            thumbColor={promoEnabled ? '#fff' : '#f4f3f4'}
+                            onValueChange={setPromoEnabled}
+                            value={promoEnabled}
+                        />
+                    </View>
+                </View>
+            </ScrollView>
         </View>
     );
 }
@@ -160,119 +137,71 @@ export default function NotificationsScreen() {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: Colors.primary,
+        backgroundColor: '#F8F9FA',
     },
     header: {
-        paddingTop: 60,
-        paddingBottom: 24,
-        paddingHorizontal: 24,
-    },
-    headerContent: {
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
+        paddingHorizontal: 20,
+        paddingTop: 60,
+        paddingBottom: 20,
+        backgroundColor: '#fff',
+        borderBottomWidth: 1,
+        borderBottomColor: '#EEE',
     },
     backButton: {
-        width: 44,
-        height: 44,
-        borderRadius: 22,
-        backgroundColor: 'rgba(255,255,255,0.3)',
-        alignItems: 'center',
-        justifyContent: 'center',
+        padding: 4,
     },
     headerTitle: {
-        fontSize: 24,
-        fontWeight: '800',
-        color: '#2C3E50',
-    },
-    markAllButton: {
-        width: 44,
-        height: 44,
-        borderRadius: 22,
-        backgroundColor: 'rgba(255,255,255,0.3)',
-        alignItems: 'center',
-        justifyContent: 'center',
+        fontSize: 18,
+        fontWeight: '700',
+        color: Colors.text,
     },
     content: {
         flex: 1,
+        padding: 20,
+    },
+    section: {
         backgroundColor: '#fff',
-        borderTopLeftRadius: 32,
-        borderTopRightRadius: 32,
-        paddingTop: 8,
+        borderRadius: 16,
+        padding: 20,
+        marginBottom: 20,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.05,
+        shadowRadius: 10,
+        elevation: 2,
     },
-    scrollContent: {
-        padding: 24,
-        paddingTop: 16,
-    },
-    notificationCard: {
-        flexDirection: 'row',
-        backgroundColor: '#fff',
-        borderRadius: 20,
-        padding: 16,
-        marginBottom: 12,
-        borderWidth: 1,
-        borderColor: '#F0F0F0',
-    },
-    notificationUnread: {
-        backgroundColor: '#F0FFF0',
-        borderColor: Colors.primary,
-    },
-    iconContainer: {
-        width: 48,
-        height: 48,
-        borderRadius: 24,
-        alignItems: 'center',
-        justifyContent: 'center',
-        marginRight: 16,
-    },
-    notificationContent: {
-        flex: 1,
-    },
-    notificationHeader: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        marginBottom: 4,
-    },
-    notificationTitle: {
+    sectionTitle: {
         fontSize: 16,
         fontWeight: '700',
         color: Colors.text,
+        marginBottom: 16,
+    },
+    row: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        paddingVertical: 8,
+    },
+    rowText: {
         flex: 1,
+        marginRight: 16,
     },
-    unreadDot: {
-        width: 8,
-        height: 8,
-        borderRadius: 4,
-        backgroundColor: Colors.primary,
-        marginLeft: 8,
+    rowLabel: {
+        fontSize: 15,
+        fontWeight: '600',
+        color: Colors.text,
+        marginBottom: 4,
     },
-    notificationMessage: {
-        fontSize: 14,
-        color: '#666',
-        lineHeight: 20,
-        marginBottom: 8,
-    },
-    notificationTime: {
-        fontSize: 12,
+    rowSubLabel: {
+        fontSize: 13,
         color: '#999',
     },
-    emptyState: {
-        alignItems: 'center',
-        justifyContent: 'center',
-        paddingVertical: 80,
-    },
-    emptyTitle: {
-        fontSize: 24,
-        fontWeight: '800',
-        color: Colors.text,
-        marginTop: 24,
-        marginBottom: 8,
-    },
-    emptyMessage: {
-        fontSize: 16,
-        color: '#666',
-        textAlign: 'center',
-        lineHeight: 24,
-        paddingHorizontal: 40,
+    divider: {
+        height: 1,
+        backgroundColor: '#F0F0F0',
+        marginVertical: 12,
     },
 });

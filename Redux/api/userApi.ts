@@ -14,6 +14,13 @@ export const userApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: ["user"],
     }),
+    deleteMyAccount: builder.mutation({
+      query: () => ({
+        url: "users/me",
+        method: "DELETE",
+      }),
+      invalidatesTags: ["user", "addresses", "orders"],
+    }),
     getSavedAddresses: builder.query({
       query: () => "users/me/addresses",
       providesTags: ["addresses"],
@@ -58,6 +65,7 @@ export const userApi = baseApi.injectEndpoints({
 export const {
   useGetMyProfileQuery,
   useUpdateMyProfileMutation,
+  useDeleteMyAccountMutation,
   useGetSavedAddressesQuery,
   useAddSavedAddressMutation,
   useUpdateSavedAddressMutation,

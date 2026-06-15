@@ -152,9 +152,9 @@ export default function OrdersScreen() {
                         onPress={refetch}
                         activeOpacity={0.7}
                     >
-                        <Ionicons name="alert-circle-outline" size={72} color="#E0E0E0" />
-                        <Text style={styles.emptyTitle}>Unable to Load Orders</Text>
-                        <Text style={styles.emptyMessage}>Tap to refresh your orders</Text>
+                        <Ionicons name="bag-handle-outline" size={72} color="#E0E0E0" />
+                        <Text style={styles.emptyTitle}>No Orders Yet</Text>
+                        <Text style={styles.emptyMessage}>There is no order yet</Text>
                     </TouchableOpacity>
                 )}
 
@@ -162,7 +162,7 @@ export default function OrdersScreen() {
                     <View style={styles.emptyState}>
                         <Ionicons name="bag-handle-outline" size={72} color="#E0E0E0" />
                         <Text style={styles.emptyTitle}>No Orders Yet</Text>
-                        <Text style={styles.emptyMessage}>Your orders will appear here</Text>
+                        <Text style={styles.emptyMessage}>There is no order yet</Text>
                     </View>
                 )}
 

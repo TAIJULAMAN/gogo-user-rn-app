@@ -25,6 +25,7 @@ import { useAppDispatch, useAppSelector } from "../../../Redux/hooks";
 import { setPickupLocation } from "../../../Redux/Slice/orderDraftSlice";
 import { CustomInput } from "../../../components/CustomInput";
 import { Colors } from "../../../constants/Colors";
+import { useKeyboardInset } from "../../../hooks/use-keyboard-inset";
 
 const STEPS = ["Locations", "Vehicle", "Checkout", "Payment"];
 const GOOGLE_PLACES_API_KEY = process.env.EXPO_PUBLIC_MAP_API_KEY;
@@ -53,6 +54,8 @@ export default function PickupLocationScreen() {
   const router = useRouter();
   const dispatch = useAppDispatch();
   const mapRef = useRef<MapView>(null);
+  const scrollRef = useRef<ScrollView>(null);
+  const { keyboardInset } = useKeyboardInset();
   const [currentStep, setCurrentStep] = useState(0);
   const [searchQuery, setSearchQuery] = useState("");
   const [showDropdown, setShowDropdown] = useState(false);
@@ -225,6 +228,12 @@ export default function PickupLocationScreen() {
       }),
     );
     router.push("/orders/drop-location");
+  };
+
+  const scrollFormIntoView = () => {
+    setTimeout(() => {
+      scrollRef.current?.scrollToEnd({ animated: true });
+    }, 120);
   };
 
   const renderStepper = () => (
@@ -403,8 +412,13 @@ export default function PickupLocationScreen() {
 
         {/* Scrollable Content */}
         <ScrollView
+          ref={scrollRef}
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={{ paddingBottom: 40, paddingTop: 10 }}
+          keyboardShouldPersistTaps="handled"
+          contentContainerStyle={[
+            styles.scrollContent,
+            { paddingBottom: 40 + keyboardInset },
+          ]}
         >
           {/* Map View */}
           <Animated.View
@@ -444,6 +458,7 @@ export default function PickupLocationScreen() {
               placeholder="Landmark, flat no., building name"
               value={details}
               onChangeText={setDetails}
+              onFocus={scrollFormIntoView}
               icon={
                 <Ionicons
                   name="information-circle-outline"
@@ -464,6 +479,7 @@ export default function PickupLocationScreen() {
                 }
               }}
               error={nameError}
+              onFocus={scrollFormIntoView}
               icon={<Ionicons name="person-outline" size={20} color="#999" />}
             />
 
@@ -479,6 +495,7 @@ export default function PickupLocationScreen() {
               }}
               error={phoneError}
               keyboardType="phone-pad"
+              onFocus={scrollFormIntoView}
               icon={<Ionicons name="call-outline" size={20} color="#999" />}
             />
 
@@ -619,6 +636,9 @@ const styles = StyleSheet.create({
   map: {
     width: "100%",
     height: "100%",
+  },
+  scrollContent: {
+    paddingTop: 10,
   },
   formContainer: {
     gap: 4,

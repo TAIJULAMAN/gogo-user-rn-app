@@ -15,7 +15,7 @@ export const PaymentSuccessModal: React.FC<PaymentSuccessModalProps> = ({
     visible,
     onClose,
     amount = 'AED 39.82',
-    isCash = false
+    isCash = false,
 }) => {
     return (
         <Modal

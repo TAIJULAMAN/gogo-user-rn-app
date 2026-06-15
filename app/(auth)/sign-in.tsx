@@ -91,7 +91,7 @@ export default function SignInScreen() {
       } else {
         router.push({
           pathname: "/(auth)/sign-up",
-          params: { phone: fullPhoneNumber },
+          params: { phone: fullPhoneNumber, countryCode: selectedCountry.code },
         });
       }
     } catch (error: any) {

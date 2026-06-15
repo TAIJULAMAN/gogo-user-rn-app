@@ -15,7 +15,7 @@ import {
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useUpdateMyProfileMutation } from "../../Redux/api/userApi";
+import { useDeleteMyAccountMutation, useUpdateMyProfileMutation } from "../../Redux/api/userApi";
 import { useAppDispatch, useAppSelector } from "../../Redux/hooks";
 import { logout, updateUser } from "../../Redux/Slice/authSlice";
 
@@ -25,6 +25,7 @@ export default function AccountScreen() {
   const dispatch = useAppDispatch();
   const user = useAppSelector((state) => state.auth.user);
   const [updateMyProfile, { isLoading: isUpdatingProfile }] = useUpdateMyProfileMutation();
+  const [deleteMyAccount, { isLoading: isDeletingAccount }] = useDeleteMyAccountMutation();
 
   const [isTaxModalVisible, setIsTaxModalVisible] = useState(false);
   const [isVerifying, setIsVerifying] = useState(false);
@@ -116,6 +117,32 @@ export default function AccountScreen() {
         },
       },
     ]);
+  };
+
+  const handleDeleteAccount = () => {
+    Alert.alert(
+      "Delete Account",
+      "This will permanently delete your account. This action cannot be undone.",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await deleteMyAccount({}).unwrap();
+              dispatch(logout());
+              router.replace("/(auth)/sign-in");
+            } catch (error: any) {
+              Alert.alert(
+                "Error",
+                error?.data?.message || "Could not delete your account.",
+              );
+            }
+          },
+        },
+      ],
+    );
   };
 
   const handleVerify = () => {
@@ -329,6 +356,28 @@ export default function AccountScreen() {
               />
             </View>
             <Text style={styles.menuItemText}>About Us</Text>
+            <Ionicons name="chevron-forward" size={18} color="#CBD5E1" />
+          </TouchableOpacity>
+
+          <View style={styles.menuDivider} />
+
+          <TouchableOpacity
+            style={styles.menuItem}
+            onPress={handleDeleteAccount}
+            disabled={isDeletingAccount}
+          >
+            <View
+              style={[styles.menuIconCircle, { backgroundColor: "#FFF1F2" }]}
+            >
+              <Ionicons
+                name="trash-outline"
+                size={20}
+                color="#E11D48"
+              />
+            </View>
+            <Text style={[styles.menuItemText, { color: "#E11D48" }]}>
+              {isDeletingAccount ? "Deleting..." : "Delete Account"}
+            </Text>
             <Ionicons name="chevron-forward" size={18} color="#CBD5E1" />
           </TouchableOpacity>
 

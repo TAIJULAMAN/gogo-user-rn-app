@@ -45,7 +45,7 @@ export default function PaymentScreen() {
   const orderPayloadRaw = params.orderPayload;
   const amount = params.amount;
 
-  const [currentStep, setCurrentStep] = useState(3);
+  const currentStep = 3;
   const [selectedMethod, setSelectedMethod] = useState("card");
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [transactionUrl, setTransactionUrl] = useState<string | null>(null);
@@ -93,22 +93,21 @@ export default function PaymentScreen() {
       setCreatedOrderId(orderId);
 
       if (selectedMethod === "cash") {
-        // Cash order created successfully
         setShowSuccessModal(true);
-      } else {
-        // Step 2: Initiate Card Payment
-        const result = await initiatePayment({
-          orderId,
-          amount: amount ? parseFloat(amount) : undefined,
-          sourceId: "src_all",
-        }).unwrap();
+        return;
+      }
 
-        if (result.data.transactionUrl) {
-          setTransactionUrl(result.data.transactionUrl);
-          setCurrentChargeId(result.data.chargeId);
-        } else {
-          Alert.alert("Error", "Failed to get payment URL");
-        }
+      const result = await initiatePayment({
+        orderId,
+        amount: amount ? parseFloat(amount) : undefined,
+        sourceId: "src_all",
+      }).unwrap();
+
+      if (result.data.transactionUrl) {
+        setTransactionUrl(result.data.transactionUrl);
+        setCurrentChargeId(result.data.chargeId);
+      } else {
+        Alert.alert("Error", "Failed to get payment URL");
       }
     } catch (error: any) {
       console.error("Payment/Order error:", error);

@@ -317,7 +317,7 @@ export default function RunningOrderScreen() {
                             </View>
                             <View style={[styles.summaryRow, { marginTop: 12 }]}>
                                 <Text style={styles.summaryLabel}>Payment</Text>
-                                <Text style={styles.summaryValue}>{order.paymentMethod || 'Cash'}</Text>
+                                <Text style={styles.summaryValue}>{order.paymentMethod || 'Card'}</Text>
                             </View>
                         </View>
 
